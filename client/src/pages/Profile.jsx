@@ -17,11 +17,16 @@ function SyncStatusBadge({ status }) {
 export default function Profile() {
   const { user, logout } = useAuth()
   const queryClient = useQueryClient()
+  const [adminTab, setAdminTab] = useState('resultado') // 'resultado' | 'palpites'
   const [adminGame, setAdminGame] = useState(null)
   const [adminScore, setAdminScore] = useState({ home: '', away: '' })
   const [adminMsg, setAdminMsg] = useState('')
   const [syncing, setSyncing] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [predsGame, setPredsGame] = useState(null)
+  const [predsData, setPredsData] = useState(null)
+  const [predsEdits, setPredsEdits] = useState({})
+  const [predsMsg, setPredsMsg] = useState('')
 
   const { data: games = [] } = useQuery({
     queryKey: ['games'],
@@ -42,6 +47,35 @@ export default function Profile() {
 
   const myEntry = leaderboard.find(e => e.user_id === user?.id)
   const myGames = games.filter(g => g.user_prediction !== null)
+
+  async function loadPreds(game) {
+    setPredsGame(game)
+    setPredsData(null)
+    setPredsEdits({})
+    setPredsMsg('')
+    const res = await api.get(`/admin/game-predictions/${game.id}`)
+    const rows = res.data.predictions
+    setPredsData(rows)
+    const edits = {}
+    for (const r of rows) {
+      edits[r.user_id] = { home: r.home_score ?? '', away: r.away_score ?? '' }
+    }
+    setPredsEdits(edits)
+  }
+
+  async function savePred(userId) {
+    const e = predsEdits[userId]
+    if (e.home === '' || e.away === '') return
+    try {
+      await api.put(`/admin/game-predictions/${predsGame.id}/${userId}`, {
+        home_score: parseInt(e.home), away_score: parseInt(e.away),
+      })
+      setPredsMsg('Salvo!')
+      queryClient.invalidateQueries({ queryKey: ['leaderboard'] })
+    } catch (err) {
+      setPredsMsg(err.response?.data?.error || 'Erro ao salvar')
+    }
+  }
 
   async function resetUsers() {
     if (!window.confirm('Apagar TODOS os usuários e palpites? Jogos ficam intactos. Não tem como desfazer.')) return
@@ -180,43 +214,100 @@ export default function Profile() {
             }`}>{adminMsg}</div>
           )}
 
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Inserir resultado manualmente:</p>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {games.filter(g => g.status !== 'finished').map(g => (
-              <button
-                key={g.id}
-                onClick={() => { setAdminGame(g); setAdminScore({ home: '', away: '' }); setAdminMsg('') }}
-                className="w-full text-left flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm dark:text-gray-300"
-              >
-                <span className="text-xs bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">{stageLabel(g.stage, g.group_name)}</span>
-                <span className="flex-1 truncate flex items-center gap-1"><FlagImg name={g.home_team} size="sm" /> {g.home_team} × <FlagImg name={g.away_team} size="sm" /> {g.away_team}</span>
-                <span className="text-xs text-gray-400 dark:text-gray-500">{formatBRT(g.match_time)}</span>
+          {/* Abas */}
+          <div className="flex gap-1 mb-3">
+            {['resultado', 'palpites'].map(tab => (
+              <button key={tab} onClick={() => { setAdminTab(tab); setAdminGame(null); setPredsGame(null); setAdminMsg(''); setPredsMsg('') }}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${adminTab === tab ? 'bg-copa-blue text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
+                {tab === 'resultado' ? 'Inserir Resultado' : 'Ver/Editar Palpites'}
               </button>
             ))}
           </div>
 
-          {adminGame && (
-            <form onSubmit={submitResult} className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-xl">
-              <p className="font-semibold text-sm mb-3 dark:text-gray-200">{adminGame.home_team} × {adminGame.away_team}</p>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number" min="0" max="30" required
-                  value={adminScore.home}
-                  onChange={e => setAdminScore(s => ({ ...s, home: e.target.value }))}
-                  className="w-16 h-12 text-center border-2 border-gray-300 rounded-lg font-bold text-xl focus:border-copa-blue focus:outline-none dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                />
-                <span className="font-bold text-gray-400 dark:text-gray-500">×</span>
-                <input
-                  type="number" min="0" max="30" required
-                  value={adminScore.away}
-                  onChange={e => setAdminScore(s => ({ ...s, away: e.target.value }))}
-                  className="w-16 h-12 text-center border-2 border-gray-300 rounded-lg font-bold text-xl focus:border-copa-blue focus:outline-none dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                />
-                <button type="submit" className="btn-primary ml-2 py-2.5 px-4">Salvar</button>
-                <button type="button" onClick={() => setAdminGame(null)} className="text-gray-400 dark:text-gray-500 text-sm ml-1">Cancelar</button>
+          {/* Aba Resultado */}
+          {adminTab === 'resultado' && (<>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Inserir resultado manualmente:</p>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {games.filter(g => g.status !== 'finished').map(g => (
+                <button key={g.id}
+                  onClick={() => { setAdminGame(g); setAdminScore({ home: '', away: '' }); setAdminMsg('') }}
+                  className="w-full text-left flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm dark:text-gray-300">
+                  <span className="text-xs bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded shrink-0">{stageLabel(g.stage, g.group_name)}</span>
+                  <span className="flex-1 truncate flex items-center gap-1 min-w-0"><FlagImg name={g.home_team} size="sm" /> {g.home_team} × <FlagImg name={g.away_team} size="sm" /> {g.away_team}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{formatBRT(g.match_time)}</span>
+                </button>
+              ))}
+            </div>
+            {adminGame && (
+              <form onSubmit={submitResult} className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                <p className="font-semibold text-sm mb-3 dark:text-gray-200">{adminGame.home_team} × {adminGame.away_team}</p>
+                <div className="flex items-center gap-2">
+                  <input type="number" min="0" max="30" required value={adminScore.home}
+                    onChange={e => setAdminScore(s => ({ ...s, home: e.target.value }))}
+                    className="w-16 h-12 text-center border-2 border-gray-300 rounded-lg font-bold text-xl focus:border-copa-blue focus:outline-none dark:bg-gray-600 dark:border-gray-500 dark:text-white" />
+                  <span className="font-bold text-gray-400 dark:text-gray-500">×</span>
+                  <input type="number" min="0" max="30" required value={adminScore.away}
+                    onChange={e => setAdminScore(s => ({ ...s, away: e.target.value }))}
+                    className="w-16 h-12 text-center border-2 border-gray-300 rounded-lg font-bold text-xl focus:border-copa-blue focus:outline-none dark:bg-gray-600 dark:border-gray-500 dark:text-white" />
+                  <button type="submit" className="btn-primary ml-2 py-2.5 px-4">Salvar</button>
+                  <button type="button" onClick={() => setAdminGame(null)} className="text-gray-400 dark:text-gray-500 text-sm ml-1">Cancelar</button>
+                </div>
+              </form>
+            )}
+          </>)}
+
+          {/* Aba Palpites */}
+          {adminTab === 'palpites' && (<>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Selecione um jogo para ver e editar os palpites:</p>
+            <div className="space-y-1 max-h-48 overflow-y-auto mb-3">
+              {games.map(g => (
+                <button key={g.id}
+                  onClick={() => loadPreds(g)}
+                  className={`w-full text-left flex items-center gap-2 p-2 rounded-lg text-sm transition-colors ${predsGame?.id === g.id ? 'bg-copa-blue/10 dark:bg-copa-blue/20 border border-copa-blue/30' : 'hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300'}`}>
+                  <span className="text-xs bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded shrink-0">{stageLabel(g.stage, g.group_name)}</span>
+                  <span className="flex-1 truncate flex items-center gap-1 min-w-0"><FlagImg name={g.home_team} size="sm" /> {g.home_team} × <FlagImg name={g.away_team} size="sm" /> {g.away_team}</span>
+                  {g.status === 'finished' && <span className="text-xs text-gray-400 shrink-0">{g.home_score}×{g.away_score}</span>}
+                </button>
+              ))}
+            </div>
+
+            {predsGame && predsData && (
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3">
+                <p className="font-semibold text-sm mb-2 dark:text-gray-200 flex items-center gap-1">
+                  <FlagImg name={predsGame.home_team} size="sm" /> {predsGame.home_team} × <FlagImg name={predsGame.away_team} size="sm" /> {predsGame.away_team}
+                </p>
+                {predsMsg && <p className="text-xs text-copa-green mb-2">{predsMsg}</p>}
+                {predsData.length === 0
+                  ? <p className="text-xs text-gray-400">Nenhum usuário cadastrado.</p>
+                  : <div className="space-y-2">
+                    {predsData.map(p => (
+                      <div key={p.user_id} className="flex items-center gap-2">
+                        <span className="flex-1 text-xs font-medium truncate dark:text-gray-200">{p.name}</span>
+                        <input type="number" min="0" max="30"
+                          value={predsEdits[p.user_id]?.home ?? ''}
+                          onChange={e => setPredsEdits(prev => ({ ...prev, [p.user_id]: { ...prev[p.user_id], home: e.target.value } }))}
+                          placeholder="—"
+                          className="w-10 h-8 text-center border border-gray-300 dark:border-gray-500 rounded text-sm font-bold dark:bg-gray-600 dark:text-white focus:outline-none focus:border-copa-blue" />
+                        <span className="text-gray-400 text-xs">×</span>
+                        <input type="number" min="0" max="30"
+                          value={predsEdits[p.user_id]?.away ?? ''}
+                          onChange={e => setPredsEdits(prev => ({ ...prev, [p.user_id]: { ...prev[p.user_id], away: e.target.value } }))}
+                          placeholder="—"
+                          className="w-10 h-8 text-center border border-gray-300 dark:border-gray-500 rounded text-sm font-bold dark:bg-gray-600 dark:text-white focus:outline-none focus:border-copa-blue" />
+                        <button onClick={() => savePred(p.user_id)}
+                          className="text-xs bg-copa-blue text-white px-2 py-1 rounded font-semibold hover:opacity-80">
+                          OK
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                }
               </div>
-            </form>
-          )}
+            )}
+            {predsGame && !predsData && (
+              <p className="text-xs text-gray-400 text-center py-4">Carregando...</p>
+            )}
+          </>)}
         </div>
       )}
 

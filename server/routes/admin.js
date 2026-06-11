@@ -17,6 +17,46 @@ router.post('/sync', requireAuth, async (req, res) => {
   res.json(result);
 });
 
+// GET todos os palpites de um jogo (admin, sem restrição de lock)
+router.get('/game-predictions/:gameId', requireAuth, async (req, res) => {
+  if (req.user.email !== ADMIN_EMAIL)
+    return res.status(403).json({ error: 'Acesso negado' });
+  try {
+    const result = await db.execute({
+      sql: `SELECT u.id as user_id, u.name, p.home_score, p.away_score, p.points_awarded
+            FROM users u
+            LEFT JOIN predictions p ON p.user_id = u.id AND p.game_id = ?
+            ORDER BY u.name ASC`,
+      args: [req.params.gameId],
+    });
+    res.json({ predictions: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT define/altera o palpite de qualquer usuário (admin)
+router.put('/game-predictions/:gameId/:userId', requireAuth, async (req, res) => {
+  if (req.user.email !== ADMIN_EMAIL)
+    return res.status(403).json({ error: 'Acesso negado' });
+  const { home_score, away_score } = req.body;
+  if (home_score === undefined || away_score === undefined)
+    return res.status(400).json({ error: 'home_score e away_score obrigatórios' });
+  try {
+    await db.execute({
+      sql: `INSERT INTO predictions (user_id, game_id, home_score, away_score)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(user_id, game_id) DO UPDATE SET
+              home_score = excluded.home_score,
+              away_score = excluded.away_score`,
+      args: [req.params.userId, req.params.gameId, home_score, away_score],
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Apaga todos os usuários e palpites (mantém jogos intactos)
 router.post('/reset-users', requireAuth, async (req, res) => {
   if (req.user.email !== ADMIN_EMAIL)
