@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import api from '../api/client'
 import GameCard from '../components/game/GameCard'
+import GroupStandings from '../components/game/GroupStandings'
 
 const STAGES = [
   { key: 'all', label: 'Todos' },
@@ -74,6 +75,11 @@ export default function Games() {
             </button>
           ))}
         </div>
+      )}
+
+      {/* Group standings table */}
+      {stage === 'group' && (
+        <GroupStandings games={games} groupName={group} />
       )}
 
       {/* Game list */}
