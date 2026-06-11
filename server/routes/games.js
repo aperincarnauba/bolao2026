@@ -1,0 +1,126 @@
+const express = require('express');
+const { db } = require('../db');
+const { requireAuth, optionalAuth } = require('../middleware/auth');
+
+const router = express.Router();
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'aperincarnauba@gmail.com';
+
+function isLocked(matchTime) {
+  return new Date() >= new Date(matchTime);
+}
+
+function rowToGame(row) {
+  return {
+    id: Number(row.id),
+    stage: row.stage,
+    group_name: row.group_name,
+    home_team: row.home_team,
+    away_team: row.away_team,
+    match_time: row.match_time,
+    cidade: row.cidade || null,
+    home_score: row.home_score !== null ? Number(row.home_score) : null,
+    away_score: row.away_score !== null ? Number(row.away_score) : null,
+    status: row.status,
+    locked: isLocked(row.match_time),
+    user_prediction: null,
+  };
+}
+
+router.get('/', optionalAuth, async (req, res) => {
+  try {
+    const result = await db.execute('SELECT * FROM games ORDER BY match_time ASC');
+    const games = result.rows.map(rowToGame);
+
+    if (req.user) {
+      const predsResult = await db.execute({
+        sql: 'SELECT * FROM predictions WHERE user_id = ?',
+        args: [req.user.userId],
+      });
+      const predMap = {};
+      for (const p of predsResult.rows) {
+        predMap[Number(p.game_id)] = {
+          home_score: Number(p.home_score),
+          away_score: Number(p.away_score),
+          points_awarded: Number(p.points_awarded),
+        };
+      }
+      for (const g of games) g.user_prediction = predMap[g.id] || null;
+    }
+
+    res.json({ games });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+router.get('/:id', optionalAuth, async (req, res) => {
+  try {
+    const result = await db.execute({ sql: 'SELECT * FROM games WHERE id = ?', args: [req.params.id] });
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Jogo não encontrado' });
+    const game = rowToGame(result.rows[0]);
+
+    if (req.user) {
+      const predResult = await db.execute({
+        sql: 'SELECT * FROM predictions WHERE user_id = ? AND game_id = ?',
+        args: [req.user.userId, game.id],
+      });
+      game.user_prediction = predResult.rows[0]
+        ? { home_score: Number(predResult.rows[0].home_score), away_score: Number(predResult.rows[0].away_score), points_awarded: Number(predResult.rows[0].points_awarded) }
+        : null;
+    }
+
+    res.json({ game });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+router.post('/:id/result', requireAuth, async (req, res) => {
+  if (req.user.email !== ADMIN_EMAIL)
+    return res.status(403).json({ error: 'Acesso negado' });
+
+  const { home_score, away_score } = req.body;
+  if (home_score === undefined || away_score === undefined)
+    return res.status(400).json({ error: 'home_score e away_score são obrigatórios' });
+  if (home_score < 0 || away_score < 0)
+    return res.status(400).json({ error: 'Placares devem ser não-negativos' });
+
+  try {
+    const gameRes = await db.execute({ sql: 'SELECT * FROM games WHERE id = ?', args: [req.params.id] });
+    if (gameRes.rows.length === 0) return res.status(404).json({ error: 'Jogo não encontrado' });
+
+    await db.execute({
+      sql: "UPDATE games SET home_score = ?, away_score = ?, status = 'finished' WHERE id = ?",
+      args: [home_score, away_score, req.params.id],
+    });
+
+    const actualResult = Math.sign(home_score - away_score);
+    const predsRes = await db.execute({ sql: 'SELECT * FROM predictions WHERE game_id = ?', args: [req.params.id] });
+
+    for (const p of predsRes.rows) {
+      const predResult = Math.sign(Number(p.home_score) - Number(p.away_score));
+      let pts = 0;
+      if (predResult === actualResult) pts += 1;
+      if (Number(p.home_score) === home_score && Number(p.away_score) === away_score) pts += 1;
+      await db.execute({ sql: 'UPDATE predictions SET points_awarded = ? WHERE id = ?', args: [pts, p.id] });
+    }
+
+    res.json({ success: true, updated_predictions: predsRes.rows.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+router.patch('/:id/teams', requireAuth, async (req, res) => {
+  if (req.user.email !== ADMIN_EMAIL)
+    return res.status(403).json({ error: 'Acesso negado' });
+  const { home_team, away_team } = req.body;
+  if (!home_team || !away_team)
+    return res.status(400).json({ error: 'home_team e away_team são obrigatórios' });
+  await db.execute({ sql: 'UPDATE games SET home_team = ?, away_team = ? WHERE id = ?', args: [home_team, away_team, req.params.id] });
+  res.json({ success: true });
+});
+
+module.exports = router;

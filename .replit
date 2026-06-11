@@ -1,0 +1,9 @@
+run = "npm install && npm run build && npm start"
+entrypoint = "server/index.js"
+
+[nix]
+channel = "stable-23_11"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
