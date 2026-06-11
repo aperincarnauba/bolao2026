@@ -33,12 +33,11 @@ router.post('/:gameId', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Jogo já começou — palpite bloqueado' });
 
     await db.execute({
-      sql: `INSERT INTO predictions (user_id, game_id, home_score, away_score, updated_at)
-            VALUES (?, ?, ?, ?, datetime('now'))
+      sql: `INSERT INTO predictions (user_id, game_id, home_score, away_score)
+            VALUES (?, ?, ?, ?)
             ON CONFLICT(user_id, game_id) DO UPDATE SET
               home_score = excluded.home_score,
-              away_score = excluded.away_score,
-              updated_at = datetime('now')`,
+              away_score = excluded.away_score`,
       args: [req.user.userId, req.params.gameId, home_score, away_score],
     });
 

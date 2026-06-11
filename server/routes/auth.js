@@ -38,12 +38,12 @@ router.post('/signup', async (req, res) => {
       return res.status(409).json({ error: 'Email já cadastrado' });
 
     const hash = await bcrypt.hash(password, 10);
-    const result = await db.execute({
+    await db.execute({
       sql: 'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
       args: [name, email, hash],
     });
 
-    const row = await db.execute({ sql: 'SELECT * FROM users WHERE id = ?', args: [result.lastInsertRowid] });
+    const row = await db.execute({ sql: 'SELECT * FROM users WHERE email = ?', args: [email] });
     const user = row.rows[0];
     res.status(201).json({ token: makeToken(user), user: userPayload(user) });
   } catch (err) {

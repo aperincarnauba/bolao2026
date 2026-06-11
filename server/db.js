@@ -1,71 +1,134 @@
-const { createClient } = require('@libsql/client');
 const path = require('path');
 const fs = require('fs');
 
-// On Replit, store DB outside the project directory so it survives redeploys
-// (project dir is inside HOME; data/ is gitignored and gets wiped on deploy)
-const isReplit = !!process.env.REPL_ID;
-const dataDir = isReplit
-  ? path.join(process.env.HOME || '/home/runner', 'bolao_data')
-  : path.join(__dirname, '..', 'data');
+// ── PostgreSQL (Replit) or SQLite (local) ────────────────────────────────────
+const USE_PG = !!process.env.DATABASE_URL;
 
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+let db;
 
-const dbPath = path.join(dataDir, 'bolao.db');
-// Windows paths use backslashes which break the file: URL — normalize to forward slashes
-const dbUrl = 'file:' + dbPath.replace(/\\/g, '/');
-console.log(`[db] Usando banco: ${dbPath}`);
-const db = createClient({ url: dbUrl });
+if (USE_PG) {
+  const { Pool } = require('pg');
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+  });
+  console.log('[db] PostgreSQL conectado');
 
+  // Wrapper que imita a API do @libsql/client:
+  //   db.execute('SELECT ...') or db.execute({ sql: '...', args: [...] })
+  //   returns { rows, rowsAffected }
+  db = {
+    _pool: pool,
+    async execute(sqlOrObj) {
+      let sql, args;
+      if (typeof sqlOrObj === 'string') { sql = sqlOrObj; args = []; }
+      else { sql = sqlOrObj.sql; args = sqlOrObj.args || []; }
+      // Convert ? placeholders → $1 $2 ... (PostgreSQL style)
+      let i = 0;
+      const pgSql = sql.replace(/\?/g, () => `$${++i}`);
+      const result = await pool.query(pgSql, args);
+      return { rows: result.rows, rowsAffected: result.rowCount ?? 0 };
+    },
+  };
+} else {
+  const { createClient } = require('@libsql/client');
+  const dataDir = path.join(__dirname, '..', 'data');
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  const dbPath = path.join(dataDir, 'bolao.db');
+  const dbUrl = 'file:' + dbPath.replace(/\\/g, '/');
+  console.log(`[db] SQLite: ${dbPath}`);
+  db = createClient({ url: dbUrl });
+}
+
+// ── Schema ────────────────────────────────────────────────────────────────────
 async function initDb() {
-  await db.executeMultiple(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL,
-      created_at TEXT DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS games (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      stage TEXT NOT NULL,
-      group_name TEXT,
-      home_team TEXT NOT NULL,
-      away_team TEXT NOT NULL,
-      match_time TEXT NOT NULL,
-      cidade TEXT,
-      home_score INTEGER,
-      away_score INTEGER,
-      status TEXT DEFAULT 'scheduled'
-    );
-
-    CREATE TABLE IF NOT EXISTS predictions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL REFERENCES users(id),
-      game_id INTEGER NOT NULL REFERENCES games(id),
-      home_score INTEGER NOT NULL,
-      away_score INTEGER NOT NULL,
-      points_awarded INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT (datetime('now')),
-      updated_at TEXT DEFAULT (datetime('now')),
-      UNIQUE(user_id, game_id)
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_pred_user ON predictions(user_id);
-    CREATE INDEX IF NOT EXISTS idx_pred_game ON predictions(game_id);
-  `);
+  if (USE_PG) {
+    const pool = db._pool;
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS games (
+        id SERIAL PRIMARY KEY,
+        stage TEXT NOT NULL,
+        group_name TEXT,
+        home_team TEXT NOT NULL,
+        away_team TEXT NOT NULL,
+        match_time TEXT NOT NULL,
+        cidade TEXT,
+        home_score INTEGER,
+        away_score INTEGER,
+        status TEXT DEFAULT 'scheduled'
+      )
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS predictions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        game_id INTEGER NOT NULL REFERENCES games(id),
+        home_score INTEGER NOT NULL,
+        away_score INTEGER NOT NULL,
+        points_awarded INTEGER DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(user_id, game_id)
+      )
+    `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_pred_user ON predictions(user_id)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_pred_game ON predictions(game_id)`);
+  } else {
+    await db.executeMultiple(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS games (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        stage TEXT NOT NULL,
+        group_name TEXT,
+        home_team TEXT NOT NULL,
+        away_team TEXT NOT NULL,
+        match_time TEXT NOT NULL,
+        cidade TEXT,
+        home_score INTEGER,
+        away_score INTEGER,
+        status TEXT DEFAULT 'scheduled'
+      );
+      CREATE TABLE IF NOT EXISTS predictions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        game_id INTEGER NOT NULL REFERENCES games(id),
+        home_score INTEGER NOT NULL,
+        away_score INTEGER NOT NULL,
+        points_awarded INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(user_id, game_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_pred_user ON predictions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_pred_game ON predictions(game_id);
+    `);
+  }
 
   await seedGames();
   await migrateGames();
 }
 
+// ── Seed ──────────────────────────────────────────────────────────────────────
 async function seedGames() {
   const result = await db.execute('SELECT COUNT(*) as c FROM games');
-  const count = result.rows[0].c;
+  const count = Number(result.rows[0].c);
   if (count > 0) return;
 
-  // Todos os horários em BRT (UTC-3) — formato: YYYY-MM-DDTHH:MM:00-03:00
   const games = [
     // ══════════ 1ª RODADA — 11 a 14 de junho ══════════
     { stage:'group', group_name:'A', home_team:'México',          away_team:'África do Sul',  match_time:'2026-06-11T16:00:00-03:00', cidade:'Cidade do México' },
@@ -80,7 +143,6 @@ async function seedGames() {
     { stage:'group', group_name:'F', home_team:'Holanda',         away_team:'Japão',          match_time:'2026-06-14T17:00:00-03:00', cidade:'Dallas' },
     { stage:'group', group_name:'E', home_team:'Costa do Marfim', away_team:'Equador',        match_time:'2026-06-14T20:00:00-03:00', cidade:'Filadélfia' },
     { stage:'group', group_name:'F', home_team:'Suécia',          away_team:'Tunísia',        match_time:'2026-06-14T23:00:00-03:00', cidade:'Monterrey' },
-
     // ── 1ª RODADA cont. — 15 a 17 de junho (Grupos G–L) ──
     { stage:'group', group_name:'H', home_team:'Espanha',         away_team:'Cabo Verde',     match_time:'2026-06-15T13:00:00-03:00', cidade:'Atlanta' },
     { stage:'group', group_name:'G', home_team:'Bélgica',         away_team:'Egito',          match_time:'2026-06-15T16:00:00-03:00', cidade:'Seattle' },
@@ -94,7 +156,6 @@ async function seedGames() {
     { stage:'group', group_name:'L', home_team:'Inglaterra',      away_team:'Croácia',        match_time:'2026-06-17T17:00:00-03:00', cidade:'Dallas' },
     { stage:'group', group_name:'L', home_team:'Gana',            away_team:'Panamá',         match_time:'2026-06-17T20:00:00-03:00', cidade:'Toronto' },
     { stage:'group', group_name:'K', home_team:'Uzbequistão',     away_team:'Colômbia',       match_time:'2026-06-17T23:00:00-03:00', cidade:'Cidade do México' },
-
     // ══════════ 2ª RODADA — 18 a 23 de junho ══════════
     { stage:'group', group_name:'A', home_team:'República Tcheca', away_team:'África do Sul',       match_time:'2026-06-18T13:00:00-03:00', cidade:'Atlanta' },
     { stage:'group', group_name:'B', home_team:'Suíça',           away_team:'Bósnia e Herzegovina',match_time:'2026-06-18T16:00:00-03:00', cidade:'Los Angeles' },
@@ -120,7 +181,6 @@ async function seedGames() {
     { stage:'group', group_name:'L', home_team:'Inglaterra',      away_team:'Gana',           match_time:'2026-06-23T17:00:00-03:00', cidade:'Boston' },
     { stage:'group', group_name:'L', home_team:'Panamá',          away_team:'Croácia',        match_time:'2026-06-23T20:00:00-03:00', cidade:'Toronto' },
     { stage:'group', group_name:'K', home_team:'Colômbia',        away_team:'RD Congo',       match_time:'2026-06-23T23:00:00-03:00', cidade:'Guadalajara' },
-
     // ══════════ 3ª RODADA — 24 a 27 de junho ══════════
     { stage:'group', group_name:'B', home_team:'Suíça',           away_team:'Canadá',         match_time:'2026-06-24T16:00:00-03:00', cidade:'Vancouver' },
     { stage:'group', group_name:'B', home_team:'Bósnia e Herzegovina', away_team:'Catar',     match_time:'2026-06-24T16:00:00-03:00', cidade:'Seattle' },
@@ -157,31 +217,16 @@ async function seedGames() {
   console.log(`Seeded ${games.length} games`);
 }
 
-// Corrects team names and match times without touching predictions or users.
-// Safe to run on a live database — only updates rows that still have the old (wrong) values.
+// ── Migrations (idempotent) ───────────────────────────────────────────────────
 async function migrateGames() {
   const fixes = [
-    // Team name corrections
     { sql: "UPDATE games SET away_team = 'República Tcheca' WHERE away_team = 'Dinamarca'" },
     { sql: "UPDATE games SET home_team = 'República Tcheca' WHERE home_team = 'Dinamarca'" },
     { sql: "UPDATE games SET away_team = 'Bósnia e Herzegovina' WHERE away_team = 'Itália' AND group_name = 'B'" },
     { sql: "UPDATE games SET home_team = 'Bósnia e Herzegovina' WHERE home_team = 'Itália' AND group_name = 'B'" },
     { sql: "UPDATE games SET home_team = 'Suécia' WHERE home_team = 'Albânia' AND group_name = 'F'" },
     { sql: "UPDATE games SET away_team = 'Suécia' WHERE away_team = 'Albânia' AND group_name = 'F'" },
-    // Time corrections
-    { sql: "UPDATE games SET match_time = '2026-06-14T01:00:00-03:00' WHERE home_team = 'Austrália' AND away_team = 'Turquia' AND match_time = '2026-06-13T01:00:00-03:00'" },
-    { sql: "UPDATE games SET match_time = '2026-06-20T00:00:00-03:00' WHERE home_team = 'Turquia' AND away_team = 'Paraguai' AND match_time = '2026-06-19T01:00:00-03:00'" },
-    { sql: "UPDATE games SET match_time = '2026-06-19T21:30:00-03:00' WHERE home_team = 'Brasil' AND away_team = 'Haiti' AND match_time = '2026-06-19T22:00:00-03:00'" },
-    { sql: "UPDATE games SET match_time = '2026-06-26T17:00:00-03:00' WHERE home_team = 'Cabo Verde' AND away_team = 'Arábia Saudita' AND match_time = '2026-06-26T21:00:00-03:00'" },
-    { sql: "UPDATE games SET match_time = '2026-06-26T17:00:00-03:00' WHERE home_team = 'Uruguai' AND away_team = 'Espanha' AND match_time = '2026-06-26T21:00:00-03:00'" },
-    { sql: "UPDATE games SET match_time = '2026-06-26T20:00:00-03:00' WHERE home_team = 'Egito' AND away_team = 'Irã' AND match_time = '2026-06-27T00:00:00-03:00'" },
-    { sql: "UPDATE games SET match_time = '2026-06-26T20:00:00-03:00' WHERE home_team = 'Nova Zelândia' AND away_team = 'Bélgica' AND match_time = '2026-06-27T00:00:00-03:00'" },
-    { sql: "UPDATE games SET match_time = '2026-06-26T23:00:00-03:00' WHERE home_team = 'Noruega' AND away_team = 'França' AND match_time = '2026-06-26T16:00:00-03:00'" },
-    { sql: "UPDATE games SET match_time = '2026-06-26T23:00:00-03:00' WHERE home_team = 'Senegal' AND away_team = 'Iraque' AND match_time = '2026-06-26T16:00:00-03:00'" },
-    { sql: "UPDATE games SET match_time = '2026-06-27T15:00:00-03:00' WHERE home_team = 'Argélia' AND away_team = 'Áustria' AND match_time = '2026-06-27T23:00:00-03:00'" },
-    { sql: "UPDATE games SET match_time = '2026-06-27T15:00:00-03:00' WHERE home_team = 'Jordânia' AND away_team = 'Argentina' AND match_time = '2026-06-27T23:00:00-03:00'" },
   ];
-
   for (const fix of fixes) {
     const r = await db.execute(fix.sql);
     if (r.rowsAffected > 0) console.log(`[migrate] ${r.rowsAffected} row(s): ${fix.sql.slice(0, 60)}`);
