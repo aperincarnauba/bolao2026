@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { initDb } = require('./db');
+const { startSyncInterval } = require('./sync');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -14,6 +15,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/games', require('./routes/games'));
 app.use('/api/predictions', require('./routes/predictions'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
+app.use('/api/admin', require('./routes/admin'));
 
 const distPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(distPath));
@@ -24,6 +26,8 @@ app.get('*', (req, res) => {
 initDb().then(() => {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Bolão Copa 2026 rodando na porta ${PORT}`);
+    // Start auto-sync every 3 minutes (only activates if FOOTBALL_API_KEY is set)
+    startSyncInterval(3 * 60 * 1000);
   });
 }).catch(err => {
   console.error('Falha ao inicializar banco de dados:', err);

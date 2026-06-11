@@ -4,12 +4,22 @@ import api from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { formatBRT, getFlagEmoji, stageLabel } from '../utils'
 
+function SyncStatusBadge({ status }) {
+  if (status === 'never' || !status) return <span className="text-gray-400 text-xs">Nunca sincronizado</span>
+  if (status === 'no_key') return <span className="text-orange-500 text-xs">Chave de API não configurada</span>
+  if (status === 'forbidden') return <span className="text-red-500 text-xs">Chave de API inválida</span>
+  if (status === 'not_found') return <span className="text-yellow-600 text-xs">Competição não disponível na API ainda</span>
+  if (status === 'ok') return <span className="text-copa-green text-xs">OK</span>
+  return <span className="text-red-500 text-xs">Erro na sincronização</span>
+}
+
 export default function Profile() {
   const { user, logout } = useAuth()
   const queryClient = useQueryClient()
   const [adminGame, setAdminGame] = useState(null)
   const [adminScore, setAdminScore] = useState({ home: '', away: '' })
   const [adminMsg, setAdminMsg] = useState('')
+  const [syncing, setSyncing] = useState(false)
 
   const { data: games = [] } = useQuery({
     queryKey: ['games'],
@@ -21,8 +31,42 @@ export default function Profile() {
     queryFn: () => api.get('/leaderboard').then(r => r.data.leaderboard),
   })
 
+  const { data: syncInfo, refetch: refetchSyncInfo } = useQuery({
+    queryKey: ['sync-status'],
+    queryFn: () => api.get('/admin/sync-status').then(r => r.data),
+    enabled: !!user?.is_admin,
+    refetchInterval: 30000,
+  })
+
   const myEntry = leaderboard.find(e => e.user_id === user?.id)
   const myGames = games.filter(g => g.user_prediction !== null)
+
+  async function triggerSync() {
+    setSyncing(true)
+    setAdminMsg('')
+    try {
+      const res = await api.post('/admin/sync')
+      const { updated, status } = res.data
+      if (status === 'no_key') {
+        setAdminMsg('Configure a variável FOOTBALL_API_KEY no Replit Secrets para ativar a sincronização automática.')
+      } else if (status === 'forbidden') {
+        setAdminMsg('Chave de API inválida. Verifique FOOTBALL_API_KEY.')
+      } else if (status === 'not_found') {
+        setAdminMsg('Competição WC 2026 ainda não disponível na football-data.org.')
+      } else if (updated > 0) {
+        setAdminMsg(`Sincronizado! ${updated} jogo(s) atualizado(s).`)
+        queryClient.invalidateQueries({ queryKey: ['games'] })
+        queryClient.invalidateQueries({ queryKey: ['leaderboard'] })
+      } else {
+        setAdminMsg('Tudo atualizado — nenhum jogo novo para sincronizar.')
+      }
+      refetchSyncInfo()
+    } catch (err) {
+      setAdminMsg(err.response?.data?.error || 'Erro na sincronização')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   async function submitResult(e) {
     e.preventDefault()
@@ -79,12 +123,34 @@ export default function Profile() {
       {/* Admin panel */}
       {user?.is_admin && (
         <div className="card p-4">
-          <h3 className="font-bold text-copa-blue mb-3">Painel Admin — Inserir Resultados</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-copa-blue">Painel Admin</h3>
+            <button
+              onClick={triggerSync}
+              disabled={syncing}
+              className="flex items-center gap-1.5 bg-copa-green text-white text-xs font-semibold px-3 py-1.5 rounded-full disabled:opacity-50 hover:opacity-90 transition-opacity"
+            >
+              <span className={syncing ? 'animate-spin' : ''}>⚽</span>
+              {syncing ? 'Sincronizando...' : 'Sincronizar Agora'}
+            </button>
+          </div>
+
+          {syncInfo && (
+            <div className="flex items-center gap-2 text-xs mb-3 px-1">
+              <span className="text-gray-400">Auto-sync:</span>
+              <SyncStatusBadge status={syncInfo.lastSyncStatus} />
+              {syncInfo.lastSyncTime && (
+                <span className="text-gray-300">· {new Date(syncInfo.lastSyncTime).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</span>
+              )}
+            </div>
+          )}
+
           {adminMsg && (
             <div className={`text-sm rounded-lg px-3 py-2 mb-3 ${
               adminMsg.includes('Erro') ? 'bg-red-50 text-red-600' : 'bg-green-50 text-copa-green'
             }`}>{adminMsg}</div>
           )}
+          <p className="text-xs text-gray-500 mb-2">Inserir resultado manualmente:</p>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {games.filter(g => g.status !== 'finished').map(g => (
               <button
