@@ -228,13 +228,15 @@ export default function Profile() {
           {adminTab === 'resultado' && (<>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Inserir resultado manualmente:</p>
             <div className="space-y-2 max-h-60 overflow-y-auto">
-              {games.filter(g => g.status !== 'finished').map(g => (
+              {games.map(g => (
                 <button key={g.id}
-                  onClick={() => { setAdminGame(g); setAdminScore({ home: '', away: '' }); setAdminMsg('') }}
-                  className="w-full text-left flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm dark:text-gray-300">
+                  onClick={() => { setAdminGame(g); setAdminScore({ home: g.home_score ?? '', away: g.away_score ?? '' }); setAdminMsg('') }}
+                  className={`w-full text-left flex items-center gap-2 p-2 rounded-lg text-sm transition-colors ${adminGame?.id === g.id ? 'bg-copa-blue/10 dark:bg-copa-blue/20 border border-copa-blue/30' : 'hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300'}`}>
                   <span className="text-xs bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded shrink-0">{stageLabel(g.stage, g.group_name)}</span>
                   <span className="flex-1 truncate flex items-center gap-1 min-w-0"><FlagImg name={g.home_team} size="sm" /> {g.home_team} × <FlagImg name={g.away_team} size="sm" /> {g.away_team}</span>
-                  <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{formatBRT(g.match_time)}</span>
+                  {g.status === 'finished'
+                    ? <span className="text-xs font-bold text-copa-green shrink-0">{g.home_score}×{g.away_score}</span>
+                    : <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{formatBRT(g.match_time)}</span>}
                 </button>
               ))}
             </div>
