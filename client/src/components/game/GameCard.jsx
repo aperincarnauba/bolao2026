@@ -75,9 +75,9 @@ export default function GameCard({ game }) {
       {/* Teams + score */}
       <div className="flex items-center gap-2">
         {/* Home team */}
-        <div className="flex-1 text-center">
-          <div className="text-2xl">{getFlagEmoji(game.home_team)}</div>
-          <div className="text-xs font-semibold mt-1 leading-tight dark:text-gray-200">{game.home_team}</div>
+        <div className="flex-1 flex flex-col items-center gap-1">
+          <span className="text-3xl leading-none">{getFlagEmoji(game.home_team)}</span>
+          <span className="text-xs font-semibold leading-tight dark:text-gray-200 text-center">{game.home_team}</span>
         </div>
 
         {/* Center: result or input */}
@@ -111,9 +111,9 @@ export default function GameCard({ game }) {
         </div>
 
         {/* Away team */}
-        <div className="flex-1 text-center">
-          <div className="text-2xl">{getFlagEmoji(game.away_team)}</div>
-          <div className="text-xs font-semibold mt-1 leading-tight dark:text-gray-200">{game.away_team}</div>
+        <div className="flex-1 flex flex-col items-center gap-1">
+          <span className="text-3xl leading-none">{getFlagEmoji(game.away_team)}</span>
+          <span className="text-xs font-semibold leading-tight dark:text-gray-200 text-center">{game.away_team}</span>
         </div>
       </div>
 

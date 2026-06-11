@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { formatBRT, stageLabel } from '../utils'
+import { formatBRT, stageLabel, getFlagEmoji } from '../utils'
 
 function SyncStatusBadge({ status }) {
   if (status === 'never' || !status) return <span className="text-gray-400 dark:text-gray-500 text-xs">Nunca sincronizado</span>
@@ -162,7 +162,7 @@ export default function Profile() {
                 className="w-full text-left flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm dark:text-gray-300"
               >
                 <span className="text-xs bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">{stageLabel(g.stage, g.group_name)}</span>
-                <span className="flex-1 truncate">{g.home_team} × {g.away_team}</span>
+                <span className="flex-1 truncate">{getFlagEmoji(g.home_team)} {g.home_team} × {getFlagEmoji(g.away_team)} {g.away_team}</span>
                 <span className="text-xs text-gray-400 dark:text-gray-500">{formatBRT(g.match_time)}</span>
               </button>
             ))}
@@ -207,7 +207,9 @@ export default function Profile() {
                 <div key={game.id} className="card p-3 flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 dark:text-gray-400">{stageLabel(game.stage, game.group_name)} · {formatBRT(game.match_time)}</p>
-                    <p className="text-sm font-medium truncate dark:text-gray-200">{game.home_team} × {game.away_team}</p>
+                    <p className="text-sm font-medium truncate dark:text-gray-200">
+                      {getFlagEmoji(game.home_team)} {game.home_team} × {getFlagEmoji(game.away_team)} {game.away_team}
+                    </p>
                   </div>
                   <div className="text-center text-sm">
                     <p className="font-bold dark:text-gray-200">{pred.home_score} × {pred.away_score}</p>

@@ -134,5 +134,5 @@ const FLAGS = {
 }
 
 export function getFlagEmoji(name) {
-  return FLAGS[name] || '🏳️'
+  return FLAGS[name] || ''
 }

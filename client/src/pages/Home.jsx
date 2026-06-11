@@ -85,12 +85,12 @@ export default function Home() {
                     </span>
                     <span>{formatBRT(game.match_time)}</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{getFlagEmoji(game.home_team)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl shrink-0">{getFlagEmoji(game.home_team)}</span>
                     <span className="font-semibold text-sm flex-1 dark:text-gray-200">{game.home_team}</span>
-                    <span className="text-gray-400 dark:text-gray-600 font-bold">×</span>
+                    <span className="text-gray-400 dark:text-gray-600 font-bold shrink-0">×</span>
                     <span className="font-semibold text-sm flex-1 text-right dark:text-gray-200">{game.away_team}</span>
-                    <span className="text-xl">{getFlagEmoji(game.away_team)}</span>
+                    <span className="text-xl shrink-0">{getFlagEmoji(game.away_team)}</span>
                   </div>
                   {game.user_prediction ? (
                     <p className="text-xs text-copa-green mt-2 text-center">
