@@ -19,6 +19,51 @@ export function stageLabel(stage, groupName) {
   return stage
 }
 
+// ISO 2-letter codes for flagcdn.com image flags — works on all platforms including Windows
+export const FLAG_CODES = {
+  // Américas
+  'Argentina': 'ar', 'Brasil': 'br', 'Bolívia': 'bo', 'Canadá': 'ca',
+  'Chile': 'cl', 'Colômbia': 'co', 'Costa Rica': 'cr', 'Cuba': 'cu',
+  'Curaçau': 'cw', 'El Salvador': 'sv', 'Equador': 'ec', 'Estados Unidos': 'us',
+  'Guatemala': 'gt', 'Haiti': 'ht', 'Honduras': 'hn', 'Jamaica': 'jm',
+  'México': 'mx', 'Nicarágua': 'ni', 'Panamá': 'pa', 'Paraguai': 'py',
+  'Peru': 'pe', 'República Dominicana': 'do', 'Trinidad e Tobago': 'tt',
+  'Uruguai': 'uy', 'Venezuela': 've',
+  // Europa
+  'Albânia': 'al', 'Alemanha': 'de', 'Áustria': 'at', 'Azerbaijão': 'az',
+  'Bélgica': 'be', 'Bósnia e Herzegovina': 'ba', 'Cazaquistão': 'kz',
+  'Croácia': 'hr', 'Dinamarca': 'dk', 'Escócia': 'gb-sct', 'Eslováquia': 'sk',
+  'Eslovênia': 'si', 'Espanha': 'es', 'França': 'fr', 'Gales': 'gb-wls',
+  'Grécia': 'gr', 'Holanda': 'nl', 'Hungria': 'hu', 'Inglaterra': 'gb-eng',
+  'Irlanda': 'ie', 'Irlanda do Norte': 'gb-nir', 'Itália': 'it',
+  'Noruega': 'no', 'Países Baixos': 'nl', 'Polônia': 'pl', 'Portugal': 'pt',
+  'República Tcheca': 'cz', 'Romênia': 'ro', 'Rússia': 'ru', 'Sérvia': 'rs',
+  'Suécia': 'se', 'Suíça': 'ch', 'Turquia': 'tr', 'Ucrânia': 'ua',
+  // África
+  'África do Sul': 'za', 'Argélia': 'dz', 'Cabo Verde': 'cv', 'Camarões': 'cm',
+  'Costa do Marfim': 'ci', 'Egito': 'eg', 'Gana': 'gh', 'Guiné': 'gn',
+  'Mali': 'ml', 'Marrocos': 'ma', 'Mauritânia': 'mr', 'Moçambique': 'mz',
+  'Namíbia': 'na', 'Nigéria': 'ng', 'RD Congo': 'cd', 'Senegal': 'sn',
+  'Tanzânia': 'tz', 'Tunísia': 'tn', 'Uganda': 'ug', 'Zimbábue': 'zw',
+  // Ásia / Oriente Médio
+  'Arábia Saudita': 'sa', 'Bahrein': 'bh', 'Catar': 'qa', 'China': 'cn',
+  'Coreia do Norte': 'kp', 'Coreia do Sul': 'kr', 'Emirados Árabes Unidos': 'ae',
+  'Filipinas': 'ph', 'Iêmen': 'ye', 'Índia': 'in', 'Indonésia': 'id',
+  'Irã': 'ir', 'Iraque': 'iq', 'Japão': 'jp', 'Jordânia': 'jo',
+  'Kuwait': 'kw', 'Líbano': 'lb', 'Líbia': 'ly', 'Omã': 'om',
+  'Palestina': 'ps', 'Quirguistão': 'kg', 'Síria': 'sy', 'Tailândia': 'th',
+  'Tajiquistão': 'tj', 'Uzbequistão': 'uz', 'Vietnã': 'vn',
+  // Oceania
+  'Austrália': 'au', 'Nova Zelândia': 'nz', 'Papua Nova Guiné': 'pg',
+}
+
+export function getFlagUrl(name) {
+  const code = FLAG_CODES[name]
+  if (!code) return null
+  return `https://flagcdn.com/w40/${code}.png`
+}
+
+// Legacy emoji map (kept for reference, not used for rendering)
 const FLAGS = {
   // Américas
   'Argentina':       '🇦🇷',

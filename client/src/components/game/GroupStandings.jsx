@@ -1,4 +1,4 @@
-import { getFlagEmoji } from '../../utils'
+import FlagImg from '../FlagImg'
 
 function calcStandings(games, groupName) {
   const teams = {}
@@ -78,7 +78,7 @@ export default function GroupStandings({ games, groupName }) {
           >
             <div className="text-xs font-bold text-gray-400 dark:text-gray-500 text-center">{i + 1}</div>
             <div className="flex items-center gap-1.5 min-w-0 pr-1">
-              <span className="text-base leading-none shrink-0">{getFlagEmoji(t.name)}</span>
+              <FlagImg name={t.name} size="sm" />
               <span className="text-xs font-semibold truncate dark:text-gray-200">{t.name}</span>
             </div>
             <div className="text-center text-sm font-extrabold text-copa-blue dark:text-blue-400">{t.pts}</div>

@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import api from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { formatBRT, getFlagEmoji, stageLabel } from '../utils'
+import { formatBRT, stageLabel } from '../utils'
+import FlagImg from '../components/FlagImg'
 
 function useGames() {
   return useQuery({
@@ -86,11 +87,11 @@ export default function Home() {
                     <span>{formatBRT(game.match_time)}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xl shrink-0">{getFlagEmoji(game.home_team)}</span>
+                    <FlagImg name={game.home_team} />
                     <span className="font-semibold text-sm flex-1 dark:text-gray-200">{game.home_team}</span>
                     <span className="text-gray-400 dark:text-gray-600 font-bold shrink-0">×</span>
                     <span className="font-semibold text-sm flex-1 text-right dark:text-gray-200">{game.away_team}</span>
-                    <span className="text-xl shrink-0">{getFlagEmoji(game.away_team)}</span>
+                    <FlagImg name={game.away_team} />
                   </div>
                   {game.user_prediction ? (
                     <p className="text-xs text-copa-green mt-2 text-center">

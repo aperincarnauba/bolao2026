@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import api from '../../api/client'
 import ScoreInput from './ScoreInput'
-import { formatBRT, getFlagEmoji, stageLabel } from '../../utils'
+import { formatBRT, stageLabel } from '../../utils'
+import FlagImg from '../FlagImg'
 
 export default function GameCard({ game }) {
   const queryClient = useQueryClient()
@@ -76,7 +77,7 @@ export default function GameCard({ game }) {
       <div className="flex items-center gap-2">
         {/* Home team */}
         <div className="flex-1 flex flex-col items-center gap-1">
-          <span className="text-3xl leading-none">{getFlagEmoji(game.home_team)}</span>
+          <FlagImg name={game.home_team} size="lg" />
           <span className="text-xs font-semibold leading-tight dark:text-gray-200 text-center">{game.home_team}</span>
         </div>
 
@@ -112,7 +113,7 @@ export default function GameCard({ game }) {
 
         {/* Away team */}
         <div className="flex-1 flex flex-col items-center gap-1">
-          <span className="text-3xl leading-none">{getFlagEmoji(game.away_team)}</span>
+          <FlagImg name={game.away_team} size="lg" />
           <span className="text-xs font-semibold leading-tight dark:text-gray-200 text-center">{game.away_team}</span>
         </div>
       </div>
