@@ -47,8 +47,8 @@ router.post('/:gameId', requireAuth, async (req, res) => {
     });
     res.json({ prediction: predRes.rows[0] });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro interno' });
+    console.error('[predictions POST]', err.message, err.stack);
+    res.status(500).json({ error: 'Erro interno', detail: err.message });
   }
 });
 

@@ -8,11 +8,15 @@ let db;
 
 if (USE_PG) {
   const { Pool } = require('pg');
+  // Replit internal Postgres uses localhost — no SSL needed
+  // External URLs (neon, supabase etc) need ssl
+  const isLocal = process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1');
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    ...(isLocal ? {} : { ssl: { rejectUnauthorized: false } }),
   });
-  console.log('[db] PostgreSQL conectado');
+  pool.on('error', (err) => console.error('[db] pg pool error:', err));
+  console.log('[db] PostgreSQL:', isLocal ? 'local (sem SSL)' : 'remoto (SSL)');
 
   // Wrapper que imita a API do @libsql/client:
   //   db.execute('SELECT ...') or db.execute({ sql: '...', args: [...] })
