@@ -21,7 +21,7 @@ export default function ScoreInput({ homeScore, awayScore, locked, saving, saved
   if (locked) {
     return (
       <div className="text-center">
-        <p className="text-base font-bold text-gray-500">
+        <p className="text-base font-bold text-gray-500 dark:text-gray-400">
           {homeScore !== undefined && homeScore !== null ? `${homeScore} × ${awayScore}` : '— × —'}
         </p>
         <p className="text-xs text-red-400 mt-0.5">🔒</p>
@@ -39,9 +39,9 @@ export default function ScoreInput({ homeScore, awayScore, locked, saving, saved
         value={home}
         onChange={e => setHome(e.target.value)}
         onBlur={trySubmit}
-        className="w-11 h-11 text-center border-2 border-gray-200 rounded-lg font-bold text-lg focus:border-copa-blue focus:outline-none transition-colors"
+        className="w-11 h-11 text-center border-2 border-gray-200 rounded-lg font-bold text-lg focus:border-copa-blue focus:outline-none transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-white"
       />
-      <span className="font-bold text-gray-300 text-lg">×</span>
+      <span className="font-bold text-gray-300 dark:text-gray-500 text-lg">×</span>
       <input
         type="number"
         inputMode="numeric"
@@ -51,7 +51,7 @@ export default function ScoreInput({ homeScore, awayScore, locked, saving, saved
         onChange={e => setAway(e.target.value)}
         onBlur={trySubmit}
         onKeyDown={e => e.key === 'Enter' && trySubmit()}
-        className="w-11 h-11 text-center border-2 border-gray-200 rounded-lg font-bold text-lg focus:border-copa-blue focus:outline-none transition-colors"
+        className="w-11 h-11 text-center border-2 border-gray-200 rounded-lg font-bold text-lg focus:border-copa-blue focus:outline-none transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-white"
       />
       <div className="w-5 text-center">
         {saving && <span className="text-gray-300 text-xs animate-spin inline-block">⏳</span>}

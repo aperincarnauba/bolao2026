@@ -24,11 +24,10 @@ export default function Leaderboard() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-extrabold text-copa-blue">Ranking</h2>
-        <span className="text-xs text-gray-400">{leaderboard.length} participantes</span>
+        <h2 className="text-xl font-extrabold text-copa-blue dark:text-blue-400">Ranking</h2>
+        <span className="text-xs text-gray-400 dark:text-gray-500">{leaderboard.length} participantes</span>
       </div>
 
-      {/* My position highlight */}
       {myEntry && (
         <div className="bg-copa-blue text-white rounded-xl p-4 flex items-center gap-4">
           <div className="text-3xl font-extrabold text-copa-yellow">#{myEntry.rank}</div>
@@ -44,17 +43,17 @@ export default function Leaderboard() {
       )}
 
       {/* Scoring legend */}
-      <div className="card p-3 flex gap-4 text-xs text-gray-500">
+      <div className="card p-3 flex gap-4 text-xs text-gray-500 dark:text-gray-400">
         <div className="flex items-center gap-1">
           <span className="bg-copa-yellow text-copa-blue px-1.5 py-0.5 rounded font-bold">2pts</span>
           <span>placar certo</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded font-bold">1pt</span>
+          <span className="bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded font-bold">1pt</span>
           <span>resultado certo</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="bg-red-100 text-red-500 px-1.5 py-0.5 rounded font-bold">0pts</span>
+          <span className="bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400 px-1.5 py-0.5 rounded font-bold">0pts</span>
           <span>errou</span>
         </div>
       </div>

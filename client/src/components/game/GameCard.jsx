@@ -28,10 +28,6 @@ export default function GameCard({ game }) {
     }
   }
 
-  const prediction = game.user_prediction
-  const isFinished = game.status === 'finished'
-  const isLocked = game.locked
-
   async function submitPrediction(homeScore, awayScore) {
     setSaving(true)
     setError('')
@@ -47,6 +43,9 @@ export default function GameCard({ game }) {
     }
   }
 
+  const prediction = game.user_prediction
+  const isFinished = game.status === 'finished'
+  const isLocked = game.locked
   const pts = prediction?.points_awarded
 
   return (
@@ -55,18 +54,20 @@ export default function GameCard({ game }) {
       <div className="flex justify-between items-start mb-3">
         <div>
           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-            isFinished ? 'bg-gray-100 text-gray-500' :
-            isLocked ? 'bg-red-50 text-red-500' :
-            'bg-blue-50 text-copa-blue'
+            isFinished
+              ? 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+              : isLocked
+              ? 'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400'
+              : 'bg-blue-50 text-copa-blue dark:bg-blue-900/30 dark:text-blue-300'
           }`}>
             {stageLabel(game.stage, game.group_name)}
             {isFinished ? ' · Encerrado' : isLocked ? ' · 🔒 Bloqueado' : ' · Aberto'}
           </span>
           {game.cidade && (
-            <p className="text-xs text-gray-400 mt-0.5 ml-1">{game.cidade}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 ml-1">{game.cidade}</p>
           )}
         </div>
-        <span className="text-xs text-gray-400 text-right shrink-0 ml-2">
+        <span className="text-xs text-gray-400 dark:text-gray-500 text-right shrink-0 ml-2">
           {formatBRT(game.match_time)}
         </span>
       </div>
@@ -76,24 +77,26 @@ export default function GameCard({ game }) {
         {/* Home team */}
         <div className="flex-1 text-center">
           <div className="text-2xl">{getFlagEmoji(game.home_team)}</div>
-          <div className="text-xs font-semibold mt-1 leading-tight">{game.home_team}</div>
+          <div className="text-xs font-semibold mt-1 leading-tight dark:text-gray-200">{game.home_team}</div>
         </div>
 
         {/* Center: result or input */}
         <div className="flex-shrink-0 px-1">
           {isFinished ? (
             <div className="text-center">
-              <p className="text-2xl font-extrabold">{game.home_score} <span className="text-gray-300">×</span> {game.away_score}</p>
+              <p className="text-2xl font-extrabold dark:text-white">
+                {game.home_score} <span className="text-gray-300 dark:text-gray-600">×</span> {game.away_score}
+              </p>
               {prediction && (
                 <div className={`mt-1 text-xs px-2 py-0.5 rounded-full font-bold ${
                   pts === 2 ? 'bg-copa-yellow text-copa-blue' :
-                  pts === 1 ? 'bg-gray-200 text-gray-600' :
-                  'bg-red-100 text-red-500'
+                  pts === 1 ? 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300' :
+                  'bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400'
                 }`}>
                   {pts === 2 ? '2 pts ✓✓' : pts === 1 ? '1 pt ✓' : '0 pts ✗'}
                 </div>
               )}
-              {!prediction && <p className="text-xs text-gray-400 mt-1">sem palpite</p>}
+              {!prediction && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">sem palpite</p>}
             </div>
           ) : (
             <ScoreInput
@@ -110,42 +113,42 @@ export default function GameCard({ game }) {
         {/* Away team */}
         <div className="flex-1 text-center">
           <div className="text-2xl">{getFlagEmoji(game.away_team)}</div>
-          <div className="text-xs font-semibold mt-1 leading-tight">{game.away_team}</div>
+          <div className="text-xs font-semibold mt-1 leading-tight dark:text-gray-200">{game.away_team}</div>
         </div>
       </div>
 
       {error && <p className="text-xs text-red-500 text-center mt-2">{error}</p>}
 
       {!isLocked && !isFinished && !prediction && (
-        <p className="text-xs text-gray-400 text-center mt-2">Digite o placar que você acha que vai ser</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-2">Digite o placar que você acha que vai ser</p>
       )}
 
       {/* Palpites dos outros — só aparecem após o jogo iniciar */}
       {isLocked && (
-        <div className="mt-3 border-t border-gray-100 pt-2">
+        <div className="mt-3 border-t border-gray-100 dark:border-gray-700 pt-2">
           <button
             onClick={togglePreds}
-            className="w-full text-xs text-copa-blue font-semibold flex items-center justify-center gap-1 py-1 hover:opacity-70 transition-opacity"
+            className="w-full text-xs text-copa-blue dark:text-blue-400 font-semibold flex items-center justify-center gap-1 py-1 hover:opacity-70 transition-opacity"
           >
-            {loadingPreds ? 'Carregando...' : showPreds ? 'Ocultar palpites' : `Ver palpites dos participantes`}
+            {loadingPreds ? 'Carregando...' : showPreds ? 'Ocultar palpites' : 'Ver palpites dos participantes'}
             {!loadingPreds && <span className="text-gray-400">{showPreds ? '▲' : '▼'}</span>}
           </button>
 
           {showPreds && otherPreds && (
             <div className="mt-2 space-y-1">
               {otherPreds.length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-2">Nenhum palpite registrado</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-2">Nenhum palpite registrado</p>
               ) : (
                 otherPreds.map((p, i) => (
-                  <div key={i} className="flex items-center gap-2 px-1 py-1 rounded-lg hover:bg-gray-50">
-                    <span className="text-xs text-gray-500 w-5 text-right">{i + 1}.</span>
-                    <span className="flex-1 text-xs font-medium truncate">{p.user_name}</span>
-                    <span className="text-xs font-bold tabular-nums">{p.home_score} × {p.away_score}</span>
+                  <div key={i} className="flex items-center gap-2 px-1 py-1 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 w-5 text-right">{i + 1}.</span>
+                    <span className="flex-1 text-xs font-medium truncate dark:text-gray-200">{p.user_name}</span>
+                    <span className="text-xs font-bold tabular-nums dark:text-gray-200">{p.home_score} × {p.away_score}</span>
                     {isFinished && p.points_awarded !== null && (
                       <span className={`text-xs w-8 text-center font-bold rounded-full px-1.5 py-0.5 ${
                         p.points_awarded === 2 ? 'bg-copa-yellow text-copa-blue' :
-                        p.points_awarded === 1 ? 'bg-gray-200 text-gray-600' :
-                        'bg-red-100 text-red-500'
+                        p.points_awarded === 1 ? 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300' :
+                        'bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400'
                       }`}>{p.points_awarded}pt</span>
                     )}
                   </div>

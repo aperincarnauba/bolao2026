@@ -2,7 +2,7 @@ export default function LeaderboardTable({ data, currentUserId }) {
   return (
     <div className="card overflow-hidden">
       {/* Header */}
-      <div className="grid grid-cols-12 gap-1 px-4 py-2 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100">
+      <div className="grid grid-cols-12 gap-1 px-4 py-2 bg-gray-50 dark:bg-gray-700/50 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-100 dark:border-gray-700">
         <div className="col-span-1 text-center">#</div>
         <div className="col-span-5">Nome</div>
         <div className="col-span-2 text-center">Pts</div>
@@ -14,28 +14,31 @@ export default function LeaderboardTable({ data, currentUserId }) {
         <div
           key={entry.user_id}
           className={`grid grid-cols-12 gap-1 px-4 py-3 items-center text-sm ${
-            i < data.length - 1 ? 'border-b border-gray-50' : ''
-          } ${entry.user_id === currentUserId ? 'bg-yellow-50 font-semibold' : 'hover:bg-gray-50'}`}
+            i < data.length - 1 ? 'border-b border-gray-50 dark:border-gray-700' : ''
+          } ${entry.user_id === currentUserId
+              ? 'bg-yellow-50 dark:bg-yellow-900/20 font-semibold'
+              : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+          }`}
         >
           <div className="col-span-1 text-center font-bold text-sm">
             {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (
-              <span className="text-gray-400">{entry.rank}</span>
+              <span className="text-gray-400 dark:text-gray-500">{entry.rank}</span>
             )}
           </div>
-          <div className="col-span-5 truncate">
+          <div className="col-span-5 truncate dark:text-gray-200">
             {entry.name}
             {entry.user_id === currentUserId && (
-              <span className="ml-1 text-xs text-copa-blue">(você)</span>
+              <span className="ml-1 text-xs text-copa-blue dark:text-blue-400">(você)</span>
             )}
           </div>
-          <div className="col-span-2 text-center font-extrabold text-copa-blue">{entry.total_points}</div>
+          <div className="col-span-2 text-center font-extrabold text-copa-blue dark:text-blue-400">{entry.total_points}</div>
           <div className="col-span-2 text-center">
-            <span className="bg-copa-yellow/20 text-copa-blue text-xs px-1.5 py-0.5 rounded font-bold">
+            <span className="bg-copa-yellow/20 text-copa-blue dark:bg-copa-yellow/10 dark:text-copa-yellow text-xs px-1.5 py-0.5 rounded font-bold">
               {entry.exact_scores}
             </span>
           </div>
           <div className="col-span-2 text-center">
-            <span className="bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded font-bold">
+            <span className="bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded font-bold">
               {entry.correct_results}
             </span>
           </div>
@@ -43,7 +46,7 @@ export default function LeaderboardTable({ data, currentUserId }) {
       ))}
 
       {data.length === 0 && (
-        <div className="py-8 text-center text-gray-400 text-sm">Sem participantes ainda</div>
+        <div className="py-8 text-center text-gray-400 dark:text-gray-500 text-sm">Sem participantes ainda</div>
       )}
     </div>
   )

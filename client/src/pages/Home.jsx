@@ -25,7 +25,6 @@ export default function Home() {
   const { data: games = [] } = useGames()
   const { data: leaderboard = [] } = useLeaderboard()
 
-  const now = new Date()
   const upcoming = games
     .filter(g => !g.locked && g.status === 'scheduled')
     .slice(0, 3)
@@ -68,11 +67,11 @@ export default function Home() {
       {/* Next games */}
       <div>
         <div className="flex justify-between items-center mb-3">
-          <h3 className="font-bold text-lg">Próximos jogos</h3>
-          <Link to="/games" className="text-copa-blue text-sm font-medium">Ver todos →</Link>
+          <h3 className="font-bold text-lg dark:text-gray-100">Próximos jogos</h3>
+          <Link to="/games" className="text-copa-blue dark:text-blue-400 text-sm font-medium">Ver todos →</Link>
         </div>
         {upcoming.length === 0 ? (
-          <div className="card p-4 text-center text-gray-500 text-sm">
+          <div className="card p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
             Sem jogos disponíveis no momento
           </div>
         ) : (
@@ -80,17 +79,17 @@ export default function Home() {
             {upcoming.map(game => (
               <Link to="/games" key={game.id}>
                 <div className="card p-4 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
-                    <span className="bg-blue-100 text-copa-blue px-2 py-0.5 rounded-full font-medium">
+                  <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 mb-2">
+                    <span className="bg-blue-100 text-copa-blue dark:bg-blue-900/30 dark:text-blue-300 px-2 py-0.5 rounded-full font-medium">
                       {stageLabel(game.stage, game.group_name)}
                     </span>
                     <span>{formatBRT(game.match_time)}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xl">{getFlagEmoji(game.home_team)}</span>
-                    <span className="font-semibold text-sm flex-1">{game.home_team}</span>
-                    <span className="text-gray-400 font-bold">×</span>
-                    <span className="font-semibold text-sm flex-1 text-right">{game.away_team}</span>
+                    <span className="font-semibold text-sm flex-1 dark:text-gray-200">{game.home_team}</span>
+                    <span className="text-gray-400 dark:text-gray-600 font-bold">×</span>
+                    <span className="font-semibold text-sm flex-1 text-right dark:text-gray-200">{game.away_team}</span>
                     <span className="text-xl">{getFlagEmoji(game.away_team)}</span>
                   </div>
                   {game.user_prediction ? (
@@ -110,26 +109,26 @@ export default function Home() {
       {/* Mini leaderboard */}
       <div>
         <div className="flex justify-between items-center mb-3">
-          <h3 className="font-bold text-lg">Ranking</h3>
-          <Link to="/leaderboard" className="text-copa-blue text-sm font-medium">Ver completo →</Link>
+          <h3 className="font-bold text-lg dark:text-gray-100">Ranking</h3>
+          <Link to="/leaderboard" className="text-copa-blue dark:text-blue-400 text-sm font-medium">Ver completo →</Link>
         </div>
         <div className="card overflow-hidden">
           {leaderboard.slice(0, 5).map((entry, i) => (
             <div
               key={entry.user_id}
               className={`flex items-center gap-3 px-4 py-3 ${
-                i < leaderboard.slice(0, 5).length - 1 ? 'border-b border-gray-100' : ''
-              } ${entry.user_id === user?.id ? 'bg-yellow-50' : ''}`}
+                i < leaderboard.slice(0, 5).length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''
+              } ${entry.user_id === user?.id ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''}`}
             >
               <span className={`text-sm font-bold w-6 text-center ${
-                i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-amber-600' : 'text-gray-400'
+                i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-amber-600' : 'text-gray-400 dark:text-gray-500'
               }`}>
                 {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${entry.rank}`}
               </span>
-              <span className="flex-1 font-medium text-sm truncate">
+              <span className="flex-1 font-medium text-sm truncate dark:text-gray-200">
                 {entry.name} {entry.user_id === user?.id ? '(você)' : ''}
               </span>
-              <span className="font-bold text-copa-blue">{entry.total_points} pts</span>
+              <span className="font-bold text-copa-blue dark:text-blue-400">{entry.total_points} pts</span>
             </div>
           ))}
         </div>

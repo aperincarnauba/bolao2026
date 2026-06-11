@@ -39,13 +39,15 @@ export default function Login() {
         <p className="text-blue-200 mt-1 text-sm">Faça seu palpite para cada jogo</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-6">
         {/* Tabs */}
-        <div className="flex rounded-lg bg-gray-100 p-1 mb-6">
+        <div className="flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1 mb-6">
           <button
             onClick={() => setTab('login')}
             className={`flex-1 py-2 rounded-md text-sm font-semibold transition-all ${
-              tab === 'login' ? 'bg-white shadow text-copa-blue' : 'text-gray-500'
+              tab === 'login'
+                ? 'bg-white dark:bg-gray-600 shadow text-copa-blue dark:text-white'
+                : 'text-gray-500 dark:text-gray-400'
             }`}
           >
             Entrar
@@ -53,7 +55,9 @@ export default function Login() {
           <button
             onClick={() => setTab('signup')}
             className={`flex-1 py-2 rounded-md text-sm font-semibold transition-all ${
-              tab === 'signup' ? 'bg-white shadow text-copa-blue' : 'text-gray-500'
+              tab === 'signup'
+                ? 'bg-white dark:bg-gray-600 shadow text-copa-blue dark:text-white'
+                : 'text-gray-500 dark:text-gray-400'
             }`}
           >
             Cadastrar
@@ -63,7 +67,7 @@ export default function Login() {
         <form onSubmit={submit} className="space-y-4">
           {tab === 'signup' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome</label>
               <input
                 type="text"
                 required
@@ -75,7 +79,7 @@ export default function Login() {
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
             <input
               type="email"
               required
@@ -86,7 +90,7 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha</label>
             <input
               type="password"
               required
@@ -99,7 +103,7 @@ export default function Login() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-3 py-2">
+            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 text-red-600 dark:text-red-400 text-sm rounded-lg px-3 py-2">
               {error}
             </div>
           )}

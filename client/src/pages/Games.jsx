@@ -9,7 +9,6 @@ const STAGES = [
   { key: 'r32', label: 'Oitavas' },
 ]
 
-// 12 grupos (A–L) para Copa 2026
 const GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
 
 export default function Games() {
@@ -38,7 +37,7 @@ export default function Games() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-extrabold text-copa-blue">Jogos</h2>
+      <h2 className="text-xl font-extrabold text-copa-blue dark:text-blue-400">Jogos</h2>
 
       {/* Stage filter */}
       <div className="flex gap-2 flex-wrap">
@@ -49,7 +48,7 @@ export default function Games() {
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
               stage === s.key
                 ? 'bg-copa-blue text-white shadow'
-                : 'bg-white text-gray-600 border border-gray-200 hover:border-copa-blue'
+                : 'bg-white text-gray-600 border border-gray-200 hover:border-copa-blue dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:border-copa-yellow'
             }`}
           >
             {s.label}
@@ -68,7 +67,7 @@ export default function Games() {
               className={`w-9 h-9 rounded-lg text-sm font-bold transition-all ${
                 group === g
                   ? 'bg-copa-yellow text-copa-blue shadow'
-                  : 'bg-white text-gray-600 border border-gray-200'
+                  : 'bg-white text-gray-600 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
               }`}
             >
               {g}
@@ -80,7 +79,7 @@ export default function Games() {
       {/* Game list */}
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="card p-6 text-center text-gray-500">Nenhum jogo encontrado</div>
+          <div className="card p-6 text-center text-gray-500 dark:text-gray-400">Nenhum jogo encontrado</div>
         ) : (
           filtered.map(game => <GameCard key={game.id} game={game} />)
         )}
