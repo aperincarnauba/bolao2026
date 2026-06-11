@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 
 const LINKS = [
   { to: '/', label: 'Início' },
@@ -11,6 +12,7 @@ const LINKS = [
 export default function Navbar() {
   const { pathname } = useLocation()
   const { user } = useAuth()
+  const { dark, toggle } = useTheme()
 
   return (
     <nav className="hidden md:flex fixed top-0 left-0 right-0 z-50 bg-copa-blue text-white h-16 items-center px-6 shadow-lg">
@@ -36,6 +38,13 @@ export default function Navbar() {
       </div>
 
       <div className="flex items-center gap-3">
+        <button
+          onClick={toggle}
+          className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-lg transition-colors"
+          title={dark ? 'Modo claro' : 'Modo escuro'}
+        >
+          {dark ? '☀️' : '🌙'}
+        </button>
         <div className="w-8 h-8 rounded-full bg-copa-yellow text-copa-blue flex items-center justify-center font-bold text-sm">
           {user?.name?.[0]?.toUpperCase()}
         </div>

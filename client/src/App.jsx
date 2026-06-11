@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import Navbar from './components/layout/Navbar'
 import BottomNav from './components/layout/BottomNav'
 import Home from './pages/Home'
@@ -20,7 +21,7 @@ function ProtectedRoute({ children }) {
 
 function AppLayout({ children }) {
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 md:pb-0 md:pt-16">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-16 md:pb-0 md:pt-16">
       <Navbar />
       <main className="max-w-2xl mx-auto px-4 py-4">
         {children}
@@ -33,6 +34,7 @@ function AppLayout({ children }) {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
           <Routes>
@@ -53,6 +55,7 @@ export default function App() {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   )
 }
