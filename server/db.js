@@ -2,11 +2,20 @@ const { createClient } = require('@libsql/client');
 const path = require('path');
 const fs = require('fs');
 
-const dataDir = path.join(__dirname, '..', 'data');
+// On Replit, store DB outside the project directory so it survives redeploys
+// (project dir is inside HOME; data/ is gitignored and gets wiped on deploy)
+const isReplit = !!process.env.REPL_ID;
+const dataDir = isReplit
+  ? path.join(process.env.HOME || '/home/runner', 'bolao_data')
+  : path.join(__dirname, '..', 'data');
+
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
 const dbPath = path.join(dataDir, 'bolao.db');
-const db = createClient({ url: `file:${dbPath}` });
+// Windows paths use backslashes which break the file: URL — normalize to forward slashes
+const dbUrl = 'file:' + dbPath.replace(/\\/g, '/');
+console.log(`[db] Usando banco: ${dbPath}`);
+const db = createClient({ url: dbUrl });
 
 async function initDb() {
   await db.executeMultiple(`
