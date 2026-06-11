@@ -21,6 +21,7 @@ export default function Profile() {
   const [adminScore, setAdminScore] = useState({ home: '', away: '' })
   const [adminMsg, setAdminMsg] = useState('')
   const [syncing, setSyncing] = useState(false)
+  const [resetting, setResetting] = useState(false)
 
   const { data: games = [] } = useQuery({
     queryKey: ['games'],
@@ -41,6 +42,22 @@ export default function Profile() {
 
   const myEntry = leaderboard.find(e => e.user_id === user?.id)
   const myGames = games.filter(g => g.user_prediction !== null)
+
+  async function resetUsers() {
+    if (!window.confirm('Apagar TODOS os usuários e palpites? Jogos ficam intactos. Não tem como desfazer.')) return
+    setResetting(true)
+    setAdminMsg('')
+    try {
+      await api.post('/admin/reset-users')
+      setAdminMsg('Todos os usuários e palpites foram apagados.')
+      queryClient.invalidateQueries({ queryKey: ['leaderboard'] })
+      queryClient.invalidateQueries({ queryKey: ['games'] })
+    } catch (err) {
+      setAdminMsg(err.response?.data?.error || 'Erro ao resetar')
+    } finally {
+      setResetting(false)
+    }
+  }
 
   async function triggerSync() {
     setSyncing(true)
@@ -126,14 +143,23 @@ export default function Profile() {
         <div className="card p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-copa-blue dark:text-blue-400">Painel Admin</h3>
-            <button
-              onClick={triggerSync}
-              disabled={syncing}
-              className="flex items-center gap-1.5 bg-copa-green text-white text-xs font-semibold px-3 py-1.5 rounded-full disabled:opacity-50 hover:opacity-90 transition-opacity"
-            >
-              <span className={syncing ? 'animate-spin' : ''}>⚽</span>
-              {syncing ? 'Sincronizando...' : 'Sincronizar Agora'}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={triggerSync}
+                disabled={syncing}
+                className="flex items-center gap-1.5 bg-copa-green text-white text-xs font-semibold px-3 py-1.5 rounded-full disabled:opacity-50 hover:opacity-90 transition-opacity"
+              >
+                <span className={syncing ? 'animate-spin' : ''}>⚽</span>
+                {syncing ? 'Sincronizando...' : 'Sincronizar'}
+              </button>
+              <button
+                onClick={resetUsers}
+                disabled={resetting}
+                className="flex items-center gap-1.5 bg-red-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full disabled:opacity-50 hover:opacity-90 transition-opacity"
+              >
+                🗑 {resetting ? 'Apagando...' : 'Resetar usuários'}
+              </button>
+            </div>
           </div>
 
           {syncInfo && (
