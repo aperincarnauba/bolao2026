@@ -71,6 +71,20 @@ async function seedGames() {
     { stage:'group', group_name:'E', home_team:'Costa do Marfim', away_team:'Equador',        match_time:'2026-06-14T20:00:00-03:00', cidade:'Filadélfia' },
     { stage:'group', group_name:'F', home_team:'Albânia',         away_team:'Tunísia',        match_time:'2026-06-14T23:00:00-03:00', cidade:'Monterrey' },
 
+    // ── 1ª RODADA cont. — 15 a 17 de junho (Grupos G–L) ──
+    { stage:'group', group_name:'H', home_team:'Espanha',         away_team:'Cabo Verde',     match_time:'2026-06-15T13:00:00-03:00', cidade:'Atlanta' },
+    { stage:'group', group_name:'G', home_team:'Bélgica',         away_team:'Egito',          match_time:'2026-06-15T16:00:00-03:00', cidade:'Seattle' },
+    { stage:'group', group_name:'H', home_team:'Arábia Saudita',  away_team:'Uruguai',        match_time:'2026-06-15T19:00:00-03:00', cidade:'Miami' },
+    { stage:'group', group_name:'G', home_team:'Irã',             away_team:'Nova Zelândia',  match_time:'2026-06-15T22:00:00-03:00', cidade:'Los Angeles' },
+    { stage:'group', group_name:'J', home_team:'Argentina',       away_team:'Argélia',        match_time:'2026-06-16T14:00:00-03:00', cidade:'Kansas City' },
+    { stage:'group', group_name:'I', home_team:'França',          away_team:'Senegal',        match_time:'2026-06-16T16:00:00-03:00', cidade:'Nova York' },
+    { stage:'group', group_name:'I', home_team:'Iraque',          away_team:'Noruega',        match_time:'2026-06-16T19:00:00-03:00', cidade:'Boston' },
+    { stage:'group', group_name:'J', home_team:'Áustria',         away_team:'Jordânia',       match_time:'2026-06-17T01:00:00-03:00', cidade:'San Francisco' },
+    { stage:'group', group_name:'K', home_team:'Portugal',        away_team:'RD Congo',       match_time:'2026-06-17T14:00:00-03:00', cidade:'Houston' },
+    { stage:'group', group_name:'L', home_team:'Inglaterra',      away_team:'Croácia',        match_time:'2026-06-17T17:00:00-03:00', cidade:'Dallas' },
+    { stage:'group', group_name:'L', home_team:'Gana',            away_team:'Panamá',         match_time:'2026-06-17T20:00:00-03:00', cidade:'Toronto' },
+    { stage:'group', group_name:'K', home_team:'Uzbequistão',     away_team:'Colômbia',       match_time:'2026-06-17T23:00:00-03:00', cidade:'Cidade do México' },
+
     // ══════════ 2ª RODADA — 18 a 23 de junho ══════════
     { stage:'group', group_name:'A', home_team:'Dinamarca',       away_team:'África do Sul',  match_time:'2026-06-18T13:00:00-03:00', cidade:'Atlanta' },
     { stage:'group', group_name:'B', home_team:'Suíça',           away_team:'Itália',         match_time:'2026-06-18T16:00:00-03:00', cidade:'Los Angeles' },
