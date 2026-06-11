@@ -17,7 +17,9 @@ JWT_SECRET = "bolao2026supersecret"
 FOOTBALL_API_KEY = "7cef7b11a8ed48c3acf362a9289aa8e4"
 
 [deployment]
-deploymentTarget = "cloudrun"
+deploymentTarget = "autoscale"
+run = ["node", "server/index.js"]
+build = ["bash", "-c", "cd client && node ../node_modules/.bin/vite build"]
 
 [workflows]
 runButton = "Project"
