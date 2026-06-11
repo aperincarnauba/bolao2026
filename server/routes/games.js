@@ -113,6 +113,36 @@ router.post('/:id/result', requireAuth, async (req, res) => {
   }
 });
 
+router.get('/:id/predictions', optionalAuth, async (req, res) => {
+  try {
+    const gameRes = await db.execute({ sql: 'SELECT match_time FROM games WHERE id = ?', args: [req.params.id] });
+    if (gameRes.rows.length === 0) return res.status(404).json({ error: 'Jogo não encontrado' });
+
+    if (!isLocked(gameRes.rows[0].match_time))
+      return res.status(403).json({ error: 'Palpites visíveis apenas após o jogo iniciar' });
+
+    const predsRes = await db.execute({
+      sql: `SELECT u.name, p.home_score, p.away_score, p.points_awarded
+            FROM predictions p JOIN users u ON p.user_id = u.id
+            WHERE p.game_id = ?
+            ORDER BY p.points_awarded DESC, u.name ASC`,
+      args: [req.params.id],
+    });
+
+    res.json({
+      predictions: predsRes.rows.map(r => ({
+        user_name: r.name,
+        home_score: Number(r.home_score),
+        away_score: Number(r.away_score),
+        points_awarded: r.points_awarded !== null ? Number(r.points_awarded) : null,
+      })),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
 router.patch('/:id/teams', requireAuth, async (req, res) => {
   if (req.user.email !== ADMIN_EMAIL)
     return res.status(403).json({ error: 'Acesso negado' });

@@ -9,6 +9,24 @@ export default function GameCard({ game }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  const [showPreds, setShowPreds] = useState(false)
+  const [otherPreds, setOtherPreds] = useState(null)
+  const [loadingPreds, setLoadingPreds] = useState(false)
+
+  async function togglePreds() {
+    if (showPreds) { setShowPreds(false); return }
+    if (otherPreds) { setShowPreds(true); return }
+    setLoadingPreds(true)
+    try {
+      const res = await api.get(`/games/${game.id}/predictions`)
+      setOtherPreds(res.data.predictions)
+      setShowPreds(true)
+    } catch {
+      // game not started yet or error — ignore
+    } finally {
+      setLoadingPreds(false)
+    }
+  }
 
   const prediction = game.user_prediction
   const isFinished = game.status === 'finished'
@@ -100,6 +118,42 @@ export default function GameCard({ game }) {
 
       {!isLocked && !isFinished && !prediction && (
         <p className="text-xs text-gray-400 text-center mt-2">Digite o placar que você acha que vai ser</p>
+      )}
+
+      {/* Palpites dos outros — só aparecem após o jogo iniciar */}
+      {isLocked && (
+        <div className="mt-3 border-t border-gray-100 pt-2">
+          <button
+            onClick={togglePreds}
+            className="w-full text-xs text-copa-blue font-semibold flex items-center justify-center gap-1 py-1 hover:opacity-70 transition-opacity"
+          >
+            {loadingPreds ? 'Carregando...' : showPreds ? 'Ocultar palpites' : `Ver palpites dos participantes`}
+            {!loadingPreds && <span className="text-gray-400">{showPreds ? '▲' : '▼'}</span>}
+          </button>
+
+          {showPreds && otherPreds && (
+            <div className="mt-2 space-y-1">
+              {otherPreds.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-2">Nenhum palpite registrado</p>
+              ) : (
+                otherPreds.map((p, i) => (
+                  <div key={i} className="flex items-center gap-2 px-1 py-1 rounded-lg hover:bg-gray-50">
+                    <span className="text-xs text-gray-500 w-5 text-right">{i + 1}.</span>
+                    <span className="flex-1 text-xs font-medium truncate">{p.user_name}</span>
+                    <span className="text-xs font-bold tabular-nums">{p.home_score} × {p.away_score}</span>
+                    {isFinished && p.points_awarded !== null && (
+                      <span className={`text-xs w-8 text-center font-bold rounded-full px-1.5 py-0.5 ${
+                        p.points_awarded === 2 ? 'bg-copa-yellow text-copa-blue' :
+                        p.points_awarded === 1 ? 'bg-gray-200 text-gray-600' :
+                        'bg-red-100 text-red-500'
+                      }`}>{p.points_awarded}pt</span>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   )
