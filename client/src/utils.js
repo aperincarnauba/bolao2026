@@ -34,7 +34,8 @@ const FLAGS = {
   'Croácia': '🇭🇷', 'Sérvia': '🇷🇸', 'Polônia': '🇵🇱',
   'Ucrânia': '🇺🇦', 'Turquia': '🇹🇷', 'Escócia': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
   'Áustria': '🇦🇹', 'Dinamarca': '🇩🇰', 'Noruega': '🇳🇴',
-  'Suíça': '🇨🇭', 'Albânia': '🇦🇱',
+  'Suíça': '🇨🇭', 'Albânia': '🇦🇱', 'Suécia': '🇸🇪',
+  'República Tcheca': '🇨🇿', 'Bósnia e Herzegovina': '🇧🇦',
   // África
   'Marrocos': '🇲🇦', 'Senegal': '🇸🇳', 'Nigéria': '🇳🇬',
   'Egito': '🇪🇬', 'Costa do Marfim': '🇨🇮', 'Camarões': '🇨🇲',

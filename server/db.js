@@ -48,6 +48,7 @@ async function initDb() {
   `);
 
   await seedGames();
+  await migrateGames();
 }
 
 async function seedGames() {
@@ -59,17 +60,17 @@ async function seedGames() {
   const games = [
     // ══════════ 1ª RODADA — 11 a 14 de junho ══════════
     { stage:'group', group_name:'A', home_team:'México',          away_team:'África do Sul',  match_time:'2026-06-11T16:00:00-03:00', cidade:'Cidade do México' },
-    { stage:'group', group_name:'A', home_team:'Coreia do Sul',   away_team:'Dinamarca',      match_time:'2026-06-11T23:00:00-03:00', cidade:'Guadalajara' },
-    { stage:'group', group_name:'B', home_team:'Canadá',          away_team:'Itália',         match_time:'2026-06-12T16:00:00-03:00', cidade:'Toronto' },
+    { stage:'group', group_name:'A', home_team:'Coreia do Sul',   away_team:'República Tcheca',    match_time:'2026-06-11T23:00:00-03:00', cidade:'Guadalajara' },
+    { stage:'group', group_name:'B', home_team:'Canadá',          away_team:'Bósnia e Herzegovina',match_time:'2026-06-12T16:00:00-03:00', cidade:'Toronto' },
     { stage:'group', group_name:'D', home_team:'Estados Unidos',  away_team:'Paraguai',       match_time:'2026-06-12T22:00:00-03:00', cidade:'Los Angeles' },
-    { stage:'group', group_name:'D', home_team:'Austrália',       away_team:'Turquia',        match_time:'2026-06-13T01:00:00-03:00', cidade:'Vancouver' },
+    { stage:'group', group_name:'D', home_team:'Austrália',       away_team:'Turquia',        match_time:'2026-06-14T01:00:00-03:00', cidade:'Vancouver' },
     { stage:'group', group_name:'B', home_team:'Catar',           away_team:'Suíça',          match_time:'2026-06-13T16:00:00-03:00', cidade:'San Francisco' },
     { stage:'group', group_name:'C', home_team:'Brasil',          away_team:'Marrocos',       match_time:'2026-06-13T19:00:00-03:00', cidade:'Nova York' },
     { stage:'group', group_name:'C', home_team:'Haiti',           away_team:'Escócia',        match_time:'2026-06-13T22:00:00-03:00', cidade:'Boston' },
     { stage:'group', group_name:'E', home_team:'Alemanha',        away_team:'Curaçau',        match_time:'2026-06-14T14:00:00-03:00', cidade:'Houston' },
     { stage:'group', group_name:'F', home_team:'Holanda',         away_team:'Japão',          match_time:'2026-06-14T17:00:00-03:00', cidade:'Dallas' },
     { stage:'group', group_name:'E', home_team:'Costa do Marfim', away_team:'Equador',        match_time:'2026-06-14T20:00:00-03:00', cidade:'Filadélfia' },
-    { stage:'group', group_name:'F', home_team:'Albânia',         away_team:'Tunísia',        match_time:'2026-06-14T23:00:00-03:00', cidade:'Monterrey' },
+    { stage:'group', group_name:'F', home_team:'Suécia',          away_team:'Tunísia',        match_time:'2026-06-14T23:00:00-03:00', cidade:'Monterrey' },
 
     // ── 1ª RODADA cont. — 15 a 17 de junho (Grupos G–L) ──
     { stage:'group', group_name:'H', home_team:'Espanha',         away_team:'Cabo Verde',     match_time:'2026-06-15T13:00:00-03:00', cidade:'Atlanta' },
@@ -86,15 +87,15 @@ async function seedGames() {
     { stage:'group', group_name:'K', home_team:'Uzbequistão',     away_team:'Colômbia',       match_time:'2026-06-17T23:00:00-03:00', cidade:'Cidade do México' },
 
     // ══════════ 2ª RODADA — 18 a 23 de junho ══════════
-    { stage:'group', group_name:'A', home_team:'Dinamarca',       away_team:'África do Sul',  match_time:'2026-06-18T13:00:00-03:00', cidade:'Atlanta' },
-    { stage:'group', group_name:'B', home_team:'Suíça',           away_team:'Itália',         match_time:'2026-06-18T16:00:00-03:00', cidade:'Los Angeles' },
+    { stage:'group', group_name:'A', home_team:'República Tcheca', away_team:'África do Sul',       match_time:'2026-06-18T13:00:00-03:00', cidade:'Atlanta' },
+    { stage:'group', group_name:'B', home_team:'Suíça',           away_team:'Bósnia e Herzegovina',match_time:'2026-06-18T16:00:00-03:00', cidade:'Los Angeles' },
     { stage:'group', group_name:'B', home_team:'Canadá',          away_team:'Catar',          match_time:'2026-06-18T19:00:00-03:00', cidade:'Vancouver' },
     { stage:'group', group_name:'A', home_team:'México',          away_team:'Coreia do Sul',  match_time:'2026-06-18T22:00:00-03:00', cidade:'Guadalajara' },
-    { stage:'group', group_name:'D', home_team:'Turquia',         away_team:'Paraguai',       match_time:'2026-06-19T01:00:00-03:00', cidade:'San Francisco' },
+    { stage:'group', group_name:'D', home_team:'Turquia',         away_team:'Paraguai',       match_time:'2026-06-20T00:00:00-03:00', cidade:'San Francisco' },
     { stage:'group', group_name:'D', home_team:'Estados Unidos',  away_team:'Austrália',      match_time:'2026-06-19T16:00:00-03:00', cidade:'Seattle' },
     { stage:'group', group_name:'C', home_team:'Escócia',         away_team:'Marrocos',       match_time:'2026-06-19T19:00:00-03:00', cidade:'Boston' },
-    { stage:'group', group_name:'C', home_team:'Brasil',          away_team:'Haiti',          match_time:'2026-06-19T22:00:00-03:00', cidade:'Filadélfia' },
-    { stage:'group', group_name:'F', home_team:'Holanda',         away_team:'Albânia',        match_time:'2026-06-20T14:00:00-03:00', cidade:'Houston' },
+    { stage:'group', group_name:'C', home_team:'Brasil',          away_team:'Haiti',          match_time:'2026-06-19T21:30:00-03:00', cidade:'Filadélfia' },
+    { stage:'group', group_name:'F', home_team:'Holanda',         away_team:'Suécia',         match_time:'2026-06-20T14:00:00-03:00', cidade:'Houston' },
     { stage:'group', group_name:'E', home_team:'Alemanha',        away_team:'Costa do Marfim',match_time:'2026-06-20T17:00:00-03:00', cidade:'Toronto' },
     { stage:'group', group_name:'E', home_team:'Equador',         away_team:'Curaçau',        match_time:'2026-06-20T21:00:00-03:00', cidade:'Kansas City' },
     { stage:'group', group_name:'F', home_team:'Tunísia',         away_team:'Japão',          match_time:'2026-06-21T01:00:00-03:00', cidade:'Monterrey' },
@@ -113,29 +114,29 @@ async function seedGames() {
 
     // ══════════ 3ª RODADA — 24 a 27 de junho ══════════
     { stage:'group', group_name:'B', home_team:'Suíça',           away_team:'Canadá',         match_time:'2026-06-24T16:00:00-03:00', cidade:'Vancouver' },
-    { stage:'group', group_name:'B', home_team:'Itália',          away_team:'Catar',          match_time:'2026-06-24T16:00:00-03:00', cidade:'Seattle' },
+    { stage:'group', group_name:'B', home_team:'Bósnia e Herzegovina', away_team:'Catar',     match_time:'2026-06-24T16:00:00-03:00', cidade:'Seattle' },
     { stage:'group', group_name:'C', home_team:'Escócia',         away_team:'Brasil',         match_time:'2026-06-24T19:00:00-03:00', cidade:'Miami' },
     { stage:'group', group_name:'C', home_team:'Marrocos',        away_team:'Haiti',          match_time:'2026-06-24T19:00:00-03:00', cidade:'Atlanta' },
-    { stage:'group', group_name:'A', home_team:'Dinamarca',       away_team:'México',         match_time:'2026-06-24T22:00:00-03:00', cidade:'Cidade do México' },
+    { stage:'group', group_name:'A', home_team:'República Tcheca', away_team:'México',        match_time:'2026-06-24T22:00:00-03:00', cidade:'Cidade do México' },
     { stage:'group', group_name:'A', home_team:'África do Sul',   away_team:'Coreia do Sul',  match_time:'2026-06-24T22:00:00-03:00', cidade:'Monterrey' },
     { stage:'group', group_name:'E', home_team:'Equador',         away_team:'Alemanha',       match_time:'2026-06-25T17:00:00-03:00', cidade:'Nova York' },
     { stage:'group', group_name:'E', home_team:'Curaçau',         away_team:'Costa do Marfim',match_time:'2026-06-25T17:00:00-03:00', cidade:'Filadélfia' },
-    { stage:'group', group_name:'F', home_team:'Japão',           away_team:'Albânia',        match_time:'2026-06-25T20:00:00-03:00', cidade:'Dallas' },
+    { stage:'group', group_name:'F', home_team:'Japão',           away_team:'Suécia',         match_time:'2026-06-25T20:00:00-03:00', cidade:'Dallas' },
     { stage:'group', group_name:'F', home_team:'Tunísia',         away_team:'Holanda',        match_time:'2026-06-25T20:00:00-03:00', cidade:'Kansas City' },
     { stage:'group', group_name:'D', home_team:'Turquia',         away_team:'Estados Unidos', match_time:'2026-06-25T23:00:00-03:00', cidade:'Los Angeles' },
     { stage:'group', group_name:'D', home_team:'Paraguai',        away_team:'Austrália',      match_time:'2026-06-25T23:00:00-03:00', cidade:'San Francisco' },
-    { stage:'group', group_name:'I', home_team:'Noruega',         away_team:'França',         match_time:'2026-06-26T16:00:00-03:00', cidade:'Boston' },
-    { stage:'group', group_name:'I', home_team:'Senegal',         away_team:'Iraque',         match_time:'2026-06-26T16:00:00-03:00', cidade:'Toronto' },
-    { stage:'group', group_name:'H', home_team:'Cabo Verde',      away_team:'Arábia Saudita', match_time:'2026-06-26T21:00:00-03:00', cidade:'Houston' },
-    { stage:'group', group_name:'H', home_team:'Uruguai',         away_team:'Espanha',        match_time:'2026-06-26T21:00:00-03:00', cidade:'Guadalajara' },
-    { stage:'group', group_name:'G', home_team:'Egito',           away_team:'Irã',            match_time:'2026-06-27T00:00:00-03:00', cidade:'Seattle' },
-    { stage:'group', group_name:'G', home_team:'Nova Zelândia',   away_team:'Bélgica',        match_time:'2026-06-27T00:00:00-03:00', cidade:'Vancouver' },
+    { stage:'group', group_name:'H', home_team:'Cabo Verde',      away_team:'Arábia Saudita', match_time:'2026-06-26T17:00:00-03:00', cidade:'Houston' },
+    { stage:'group', group_name:'H', home_team:'Uruguai',         away_team:'Espanha',        match_time:'2026-06-26T17:00:00-03:00', cidade:'Guadalajara' },
+    { stage:'group', group_name:'G', home_team:'Egito',           away_team:'Irã',            match_time:'2026-06-26T20:00:00-03:00', cidade:'Seattle' },
+    { stage:'group', group_name:'G', home_team:'Nova Zelândia',   away_team:'Bélgica',        match_time:'2026-06-26T20:00:00-03:00', cidade:'Vancouver' },
+    { stage:'group', group_name:'I', home_team:'Noruega',         away_team:'França',         match_time:'2026-06-26T23:00:00-03:00', cidade:'Boston' },
+    { stage:'group', group_name:'I', home_team:'Senegal',         away_team:'Iraque',         match_time:'2026-06-26T23:00:00-03:00', cidade:'Toronto' },
     { stage:'group', group_name:'L', home_team:'Panamá',          away_team:'Inglaterra',     match_time:'2026-06-27T18:00:00-03:00', cidade:'Nova York' },
     { stage:'group', group_name:'L', home_team:'Croácia',         away_team:'Gana',           match_time:'2026-06-27T18:00:00-03:00', cidade:'Filadélfia' },
     { stage:'group', group_name:'K', home_team:'Colômbia',        away_team:'Portugal',       match_time:'2026-06-27T20:30:00-03:00', cidade:'Miami' },
     { stage:'group', group_name:'K', home_team:'RD Congo',        away_team:'Uzbequistão',    match_time:'2026-06-27T20:30:00-03:00', cidade:'Atlanta' },
-    { stage:'group', group_name:'J', home_team:'Argélia',         away_team:'Áustria',        match_time:'2026-06-27T23:00:00-03:00', cidade:'Kansas City' },
-    { stage:'group', group_name:'J', home_team:'Jordânia',        away_team:'Argentina',      match_time:'2026-06-27T23:00:00-03:00', cidade:'Dallas' },
+    { stage:'group', group_name:'J', home_team:'Argélia',         away_team:'Áustria',        match_time:'2026-06-27T15:00:00-03:00', cidade:'Kansas City' },
+    { stage:'group', group_name:'J', home_team:'Jordânia',        away_team:'Argentina',      match_time:'2026-06-27T15:00:00-03:00', cidade:'Dallas' },
   ];
 
   for (const g of games) {
@@ -145,6 +146,37 @@ async function seedGames() {
     });
   }
   console.log(`Seeded ${games.length} games`);
+}
+
+// Corrects team names and match times without touching predictions or users.
+// Safe to run on a live database — only updates rows that still have the old (wrong) values.
+async function migrateGames() {
+  const fixes = [
+    // Team name corrections
+    { sql: "UPDATE games SET away_team = 'República Tcheca' WHERE away_team = 'Dinamarca'" },
+    { sql: "UPDATE games SET home_team = 'República Tcheca' WHERE home_team = 'Dinamarca'" },
+    { sql: "UPDATE games SET away_team = 'Bósnia e Herzegovina' WHERE away_team = 'Itália' AND group_name = 'B'" },
+    { sql: "UPDATE games SET home_team = 'Bósnia e Herzegovina' WHERE home_team = 'Itália' AND group_name = 'B'" },
+    { sql: "UPDATE games SET home_team = 'Suécia' WHERE home_team = 'Albânia' AND group_name = 'F'" },
+    { sql: "UPDATE games SET away_team = 'Suécia' WHERE away_team = 'Albânia' AND group_name = 'F'" },
+    // Time corrections
+    { sql: "UPDATE games SET match_time = '2026-06-14T01:00:00-03:00' WHERE home_team = 'Austrália' AND away_team = 'Turquia' AND match_time = '2026-06-13T01:00:00-03:00'" },
+    { sql: "UPDATE games SET match_time = '2026-06-20T00:00:00-03:00' WHERE home_team = 'Turquia' AND away_team = 'Paraguai' AND match_time = '2026-06-19T01:00:00-03:00'" },
+    { sql: "UPDATE games SET match_time = '2026-06-19T21:30:00-03:00' WHERE home_team = 'Brasil' AND away_team = 'Haiti' AND match_time = '2026-06-19T22:00:00-03:00'" },
+    { sql: "UPDATE games SET match_time = '2026-06-26T17:00:00-03:00' WHERE home_team = 'Cabo Verde' AND away_team = 'Arábia Saudita' AND match_time = '2026-06-26T21:00:00-03:00'" },
+    { sql: "UPDATE games SET match_time = '2026-06-26T17:00:00-03:00' WHERE home_team = 'Uruguai' AND away_team = 'Espanha' AND match_time = '2026-06-26T21:00:00-03:00'" },
+    { sql: "UPDATE games SET match_time = '2026-06-26T20:00:00-03:00' WHERE home_team = 'Egito' AND away_team = 'Irã' AND match_time = '2026-06-27T00:00:00-03:00'" },
+    { sql: "UPDATE games SET match_time = '2026-06-26T20:00:00-03:00' WHERE home_team = 'Nova Zelândia' AND away_team = 'Bélgica' AND match_time = '2026-06-27T00:00:00-03:00'" },
+    { sql: "UPDATE games SET match_time = '2026-06-26T23:00:00-03:00' WHERE home_team = 'Noruega' AND away_team = 'França' AND match_time = '2026-06-26T16:00:00-03:00'" },
+    { sql: "UPDATE games SET match_time = '2026-06-26T23:00:00-03:00' WHERE home_team = 'Senegal' AND away_team = 'Iraque' AND match_time = '2026-06-26T16:00:00-03:00'" },
+    { sql: "UPDATE games SET match_time = '2026-06-27T15:00:00-03:00' WHERE home_team = 'Argélia' AND away_team = 'Áustria' AND match_time = '2026-06-27T23:00:00-03:00'" },
+    { sql: "UPDATE games SET match_time = '2026-06-27T15:00:00-03:00' WHERE home_team = 'Jordânia' AND away_team = 'Argentina' AND match_time = '2026-06-27T23:00:00-03:00'" },
+  ];
+
+  for (const fix of fixes) {
+    const r = await db.execute(fix.sql);
+    if (r.rowsAffected > 0) console.log(`[migrate] ${r.rowsAffected} row(s): ${fix.sql.slice(0, 60)}`);
+  }
 }
 
 module.exports = { db, initDb };
