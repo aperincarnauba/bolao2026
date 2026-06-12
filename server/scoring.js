@@ -47,8 +47,11 @@ async function recalcGame(gameId) {
   for (const p of preds) {
     const predSign = Math.sign(Number(p.home_score) - Number(p.away_score));
     let pts = 0;
-    if (predSign === actualSign) pts += resultPts;
-    if (Number(p.home_score) === actualHome && Number(p.away_score) === actualAway) pts += exactPts;
+    if (Number(p.home_score) === actualHome && Number(p.away_score) === actualAway) {
+      pts = exactPts; // placar exato — maior tier, não soma com resultado
+    } else if (predSign === actualSign) {
+      pts = resultPts; // só resultado certo
+    }
     const uv = predSign === actualSign ? underdogValue : 0;
     await db.execute({
       sql: 'UPDATE predictions SET points_awarded = ?, underdog_value = ? WHERE id = ?',

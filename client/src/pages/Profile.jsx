@@ -394,7 +394,7 @@ export default function Profile() {
                   {isFinished && (
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${(() => {
                       const { resultPts, exactPts } = getGamePoints(game.stage, game.home_team, game.away_team)
-                      const maxPts = resultPts + exactPts
+                      const maxPts = exactPts
                       return pred.points_awarded === maxPts ? 'bg-copa-yellow text-copa-blue' :
                              pred.points_awarded > 0 ? 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300' :
                              'bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400'

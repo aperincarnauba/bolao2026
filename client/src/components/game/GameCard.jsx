@@ -61,7 +61,7 @@ export default function GameCard({ game }) {
   const isLocked = game.locked
   const pts = prediction?.points_awarded
   const { resultPts, exactPts } = getGamePoints(game.stage, game.home_team, game.away_team)
-  const maxPts = resultPts + exactPts
+  const maxPts = exactPts // placar exato é o tier máximo (não soma com resultado)
   const isBrazil = game.home_team === 'Brasil' || game.away_team === 'Brasil'
   const isKnockout = game.stage !== 'group'
 
