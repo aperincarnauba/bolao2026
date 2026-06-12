@@ -7,6 +7,7 @@ const LINKS = [
   { to: '/games', label: 'Jogos' },
   { to: '/leaderboard', label: 'Ranking' },
   { to: '/profile', label: 'Perfil' },
+  { to: '/regras', label: 'Regras' },
 ]
 
 export default function Navbar() {

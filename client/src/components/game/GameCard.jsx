@@ -2,8 +2,20 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import api from '../../api/client'
 import ScoreInput from './ScoreInput'
-import { formatBRT, stageLabel } from '../../utils'
+import { formatBRT, stageLabel, getGamePoints } from '../../utils'
 import FlagImg from '../FlagImg'
+
+function ptsBadgeClass(pts, maxPts) {
+  if (pts === maxPts) return 'bg-copa-yellow text-copa-blue'
+  if (pts > 0) return 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+  return 'bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400'
+}
+
+function ptsLabel(pts, maxPts) {
+  if (pts === maxPts) return `${pts} pts ✓✓`
+  if (pts > 0) return `${pts} pt${pts > 1 ? 's' : ''} ✓`
+  return '0 pts ✗'
+}
 
 export default function GameCard({ game }) {
   const queryClient = useQueryClient()
@@ -48,24 +60,41 @@ export default function GameCard({ game }) {
   const isFinished = game.status === 'finished'
   const isLocked = game.locked
   const pts = prediction?.points_awarded
+  const { resultPts, exactPts } = getGamePoints(game.stage, game.home_team, game.away_team)
+  const maxPts = resultPts + exactPts
+  const isBrazil = game.home_team === 'Brasil' || game.away_team === 'Brasil'
+  const isKnockout = game.stage !== 'group'
 
   return (
     <div className={`card p-4 ${isLocked && !isFinished ? 'opacity-80' : ''}`}>
       {/* Header: stage + city + time + status */}
       <div className="flex justify-between items-start mb-3">
-        <div>
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-            isFinished
-              ? 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
-              : isLocked
-              ? 'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400'
-              : 'bg-blue-50 text-copa-blue dark:bg-blue-900/30 dark:text-blue-300'
-          }`}>
-            {stageLabel(game.stage, game.group_name)}
-            {isFinished ? ' · Encerrado' : isLocked ? ' · 🔒 Bloqueado' : ' · Aberto'}
-          </span>
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+              isFinished
+                ? 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                : isLocked
+                ? 'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400'
+                : 'bg-blue-50 text-copa-blue dark:bg-blue-900/30 dark:text-blue-300'
+            }`}>
+              {stageLabel(game.stage, game.group_name)}
+              {isFinished ? ' · Encerrado' : isLocked ? ' · 🔒 Bloqueado' : ' · Aberto'}
+            </span>
+            {/* Points badge */}
+            {isBrazil && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-green-100 text-copa-green dark:bg-green-900/30 dark:text-green-400">
+                🇧🇷 até {maxPts} pts
+              </span>
+            )}
+            {!isBrazil && isKnockout && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
+                até {maxPts} pts
+              </span>
+            )}
+          </div>
           {game.cidade && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 ml-1">{game.cidade}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 ml-1">{game.cidade}</p>
           )}
         </div>
         <span className="text-xs text-gray-400 dark:text-gray-500 text-right shrink-0 ml-2">
@@ -89,12 +118,8 @@ export default function GameCard({ game }) {
                 {game.home_score} <span className="text-gray-300 dark:text-gray-600">×</span> {game.away_score}
               </p>
               {prediction && (
-                <div className={`mt-1 text-xs px-2 py-0.5 rounded-full font-bold ${
-                  pts === 2 ? 'bg-copa-yellow text-copa-blue' :
-                  pts === 1 ? 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300' :
-                  'bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400'
-                }`}>
-                  {pts === 2 ? '2 pts ✓✓' : pts === 1 ? '1 pt ✓' : '0 pts ✗'}
+                <div className={`mt-1 text-xs px-2 py-0.5 rounded-full font-bold ${ptsBadgeClass(pts, maxPts)}`}>
+                  {ptsLabel(pts, maxPts)}
                 </div>
               )}
               {!prediction && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">sem palpite</p>}
@@ -146,11 +171,9 @@ export default function GameCard({ game }) {
                     <span className="flex-1 text-xs font-medium truncate dark:text-gray-200">{p.user_name}</span>
                     <span className="text-xs font-bold tabular-nums dark:text-gray-200">{p.home_score} × {p.away_score}</span>
                     {isFinished && p.points_awarded !== null && (
-                      <span className={`text-xs w-8 text-center font-bold rounded-full px-1.5 py-0.5 ${
-                        p.points_awarded === 2 ? 'bg-copa-yellow text-copa-blue' :
-                        p.points_awarded === 1 ? 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300' :
-                        'bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400'
-                      }`}>{p.points_awarded}pt</span>
+                      <span className={`text-xs w-8 text-center font-bold rounded-full px-1.5 py-0.5 ${ptsBadgeClass(p.points_awarded, maxPts)}`}>
+                        {p.points_awarded}pt
+                      </span>
                     )}
                   </div>
                 ))

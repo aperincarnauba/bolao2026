@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const { initDb } = require('./db');
 const { startSyncInterval } = require('./sync');
+const { recalcAllFinishedGames } = require('./scoring');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,10 +24,10 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
-initDb().then(() => {
+initDb().then(async () => {
+  await recalcAllFinishedGames();
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Bolão Copa 2026 rodando na porta ${PORT}`);
-    // Start auto-sync every 3 minutes (only activates if FOOTBALL_API_KEY is set)
     startSyncInterval(3 * 60 * 1000);
   });
 }).catch(err => {

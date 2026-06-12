@@ -57,6 +57,24 @@ export const FLAG_CODES = {
   'Austrália': 'au', 'Nova Zelândia': 'nz', 'Papua Nova Guiné': 'pg',
 }
 
+// Points per game type. Brazil always gets the max between its bonus (3,4) and the stage value.
+export function getGamePoints(stage, homeTeam, awayTeam) {
+  const isBrazil = homeTeam === 'Brasil' || awayTeam === 'Brasil'
+  let resultPts, exactPts
+  if (stage === 'final') {
+    resultPts = 4; exactPts = 5
+  } else if (stage === 'group') {
+    resultPts = 1; exactPts = 2
+  } else {
+    resultPts = 2; exactPts = 3
+  }
+  if (isBrazil) {
+    resultPts = Math.max(resultPts, 3)
+    exactPts = Math.max(exactPts, 4)
+  }
+  return { resultPts, exactPts }
+}
+
 export function getFlagUrl(name) {
   const code = FLAG_CODES[name]
   if (!code) return null

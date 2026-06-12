@@ -8,6 +8,7 @@ import Home from './pages/Home'
 import Games from './pages/Games'
 import Leaderboard from './pages/Leaderboard'
 import Profile from './pages/Profile'
+import Rules from './pages/Rules'
 import Login from './pages/Login'
 
 const queryClient = new QueryClient({
@@ -50,6 +51,9 @@ export default function App() {
             } />
             <Route path="/profile" element={
               <ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>
+            } />
+            <Route path="/regras" element={
+              <ProtectedRoute><AppLayout><Rules /></AppLayout></ProtectedRoute>
             } />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

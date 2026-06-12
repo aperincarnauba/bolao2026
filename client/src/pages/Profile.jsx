@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { formatBRT, stageLabel } from '../utils'
+import { formatBRT, stageLabel, getGamePoints } from '../utils'
 import FlagImg from '../components/FlagImg'
 
 function SyncStatusBadge({ status }) {
@@ -392,11 +392,13 @@ export default function Profile() {
                     )}
                   </div>
                   {isFinished && (
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
-                      pred.points_awarded === 2 ? 'bg-copa-yellow text-copa-blue' :
-                      pred.points_awarded === 1 ? 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300' :
-                      'bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${(() => {
+                      const { resultPts, exactPts } = getGamePoints(game.stage, game.home_team, game.away_team)
+                      const maxPts = resultPts + exactPts
+                      return pred.points_awarded === maxPts ? 'bg-copa-yellow text-copa-blue' :
+                             pred.points_awarded > 0 ? 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300' :
+                             'bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400'
+                    })()}`}>
                       {pred.points_awarded}
                     </div>
                   )}

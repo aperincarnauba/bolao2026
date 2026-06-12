@@ -6,6 +6,7 @@ const ITEMS = [
   { to: '/games', icon: '⚽', label: 'Jogos' },
   { to: '/leaderboard', icon: '🏆', label: 'Ranking' },
   { to: '/profile', icon: '👤', label: 'Perfil' },
+  { to: '/regras', icon: '📋', label: 'Regras' },
 ]
 
 export default function BottomNav() {

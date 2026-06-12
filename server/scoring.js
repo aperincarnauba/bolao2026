@@ -1,10 +1,27 @@
 const { db } = require('./db');
 
-// Recalculates points_awarded and underdog_value for ALL predictions of a finished game.
-// Call this whenever a game result changes OR a prediction for a finished game is edited.
+// Points per game type. Brazil always gets the highest between its bonus (3,4) and the stage.
+function getGamePoints(stage, homeTeam, awayTeam) {
+  const isBrazil = homeTeam === 'Brasil' || awayTeam === 'Brasil';
+  let resultPts, exactPts;
+  if (stage === 'final') {
+    resultPts = 4; exactPts = 5;
+  } else if (stage === 'group') {
+    resultPts = 1; exactPts = 2;
+  } else {
+    // r32, r16, qf, sf — mata-mata
+    resultPts = 2; exactPts = 3;
+  }
+  if (isBrazil) {
+    resultPts = Math.max(resultPts, 3);
+    exactPts = Math.max(exactPts, 4);
+  }
+  return { resultPts, exactPts };
+}
+
 async function recalcGame(gameId) {
   const gameRes = await db.execute({
-    sql: "SELECT home_score, away_score FROM games WHERE id = ? AND status = 'finished'",
+    sql: "SELECT home_score, away_score, stage, home_team, away_team FROM games WHERE id = ? AND status = 'finished'",
     args: [gameId],
   });
   if (gameRes.rows.length === 0) return 0;
@@ -13,6 +30,7 @@ async function recalcGame(gameId) {
   const actualHome = Number(g.home_score);
   const actualAway = Number(g.away_score);
   const actualSign = Math.sign(actualHome - actualAway);
+  const { resultPts, exactPts } = getGamePoints(g.stage, g.home_team, g.away_team);
 
   const predsRes = await db.execute({
     sql: 'SELECT * FROM predictions WHERE game_id = ?',
@@ -21,7 +39,6 @@ async function recalcGame(gameId) {
   const preds = predsRes.rows;
   if (preds.length === 0) return 0;
 
-  // Underdog odds: total / correctCount — 1
   const correctCount = preds.filter(
     p => Math.sign(Number(p.home_score) - Number(p.away_score)) === actualSign
   ).length;
@@ -30,10 +47,9 @@ async function recalcGame(gameId) {
   for (const p of preds) {
     const predSign = Math.sign(Number(p.home_score) - Number(p.away_score));
     let pts = 0;
-    if (predSign === actualSign) pts++;
-    if (Number(p.home_score) === actualHome && Number(p.away_score) === actualAway) pts++;
+    if (predSign === actualSign) pts += resultPts;
+    if (Number(p.home_score) === actualHome && Number(p.away_score) === actualAway) pts += exactPts;
     const uv = predSign === actualSign ? underdogValue : 0;
-
     await db.execute({
       sql: 'UPDATE predictions SET points_awarded = ?, underdog_value = ? WHERE id = ?',
       args: [pts, uv, p.id],
@@ -43,4 +59,14 @@ async function recalcGame(gameId) {
   return preds.length;
 }
 
-module.exports = { recalcGame };
+async function recalcAllFinishedGames() {
+  const result = await db.execute("SELECT id FROM games WHERE status = 'finished'");
+  for (const row of result.rows) {
+    await recalcGame(Number(row.id));
+  }
+  if (result.rows.length > 0) {
+    console.log(`[scoring] Recalculados ${result.rows.length} jogo(s) finalizado(s)`);
+  }
+}
+
+module.exports = { getGamePoints, recalcGame, recalcAllFinishedGames };
