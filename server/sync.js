@@ -64,6 +64,15 @@ const TEAM_MAP = {
   'Serbia': 'Sérvia',
   'Poland': 'Polônia',
   'Ukraine': 'Ucrânia',
+  // Nomes que a API retorna diferentes dos nossos
+  'Czechia': 'República Tcheca',
+  'Czech Republic': 'República Tcheca',
+  'Sweden': 'Suécia',
+  'Bosnia-Herzegovina': 'Bósnia e Herzegovina',
+  'Bosnia and Herzegovina': 'Bósnia e Herzegovina',
+  'Cape Verde Islands': 'Cabo Verde',
+  'Congo DR': 'RD Congo',
+  'DR Congo': 'RD Congo',
 };
 
 let lastSyncTime = null;
