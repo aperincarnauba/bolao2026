@@ -12,11 +12,12 @@ router.get('/', async (req, res) => {
         COALESCE(SUM(p.points_awarded), 0) AS total_points,
         COUNT(p.id) AS predictions_made,
         SUM(CASE WHEN p.points_awarded = 2 THEN 1 ELSE 0 END) AS exact_scores,
-        SUM(CASE WHEN p.points_awarded >= 1 THEN 1 ELSE 0 END) AS correct_results
+        SUM(CASE WHEN p.points_awarded >= 1 THEN 1 ELSE 0 END) AS correct_results,
+        COALESCE(SUM(p.underdog_value), 0) AS underdog_score
       FROM users u
       LEFT JOIN predictions p ON p.user_id = u.id
       GROUP BY u.id
-      ORDER BY total_points DESC, exact_scores DESC, predictions_made DESC
+      ORDER BY total_points DESC, exact_scores DESC, underdog_score DESC, predictions_made DESC
     `);
 
     const leaderboard = result.rows.map((row, i) => ({
@@ -27,6 +28,7 @@ router.get('/', async (req, res) => {
       predictions_made: Number(row.predictions_made),
       exact_scores: Number(row.exact_scores) || 0,
       correct_results: Number(row.correct_results) || 0,
+      underdog_score: Math.round(Number(row.underdog_score) * 100) / 100,
     }));
 
     res.json({ leaderboard });

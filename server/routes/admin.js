@@ -1,6 +1,7 @@
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
 const { syncResults, getSyncInfo } = require('../sync');
+const { recalcGame } = require('../scoring');
 const { db } = require('../db');
 
 const router = express.Router();
@@ -35,8 +36,7 @@ router.get('/game-predictions/:gameId', requireAuth, async (req, res) => {
   }
 });
 
-// PUT define/altera o palpite de qualquer usuário (admin)
-// Se o jogo já tem resultado, recalcula os pontos dessa previsão imediatamente
+// PUT define/altera o palpite de qualquer usuário (admin), recalcula pontos + underdog
 router.put('/game-predictions/:gameId/:userId', requireAuth, async (req, res) => {
   if (req.user.email !== ADMIN_EMAIL)
     return res.status(403).json({ error: 'Acesso negado' });
@@ -52,25 +52,36 @@ router.put('/game-predictions/:gameId/:userId', requireAuth, async (req, res) =>
               away_score = excluded.away_score`,
       args: [req.params.userId, req.params.gameId, home_score, away_score],
     });
+    await recalcGame(Number(req.params.gameId));
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-    // Recalculate points if game is already finished
-    const gameRes = await db.execute({
-      sql: "SELECT home_score, away_score FROM games WHERE id = ? AND status = 'finished'",
-      args: [req.params.gameId],
-    });
-    if (gameRes.rows.length > 0) {
-      const g = gameRes.rows[0];
-      const actualSign = Math.sign(Number(g.home_score) - Number(g.away_score));
-      const predSign = Math.sign(home_score - away_score);
-      let pts = 0;
-      if (predSign === actualSign) pts++;
-      if (home_score === Number(g.home_score) && away_score === Number(g.away_score)) pts++;
-      await db.execute({
-        sql: 'UPDATE predictions SET points_awarded = ? WHERE user_id = ? AND game_id = ?',
-        args: [pts, req.params.userId, req.params.gameId],
-      });
-    }
+// GET lista todos os usuários (admin)
+router.get('/users', requireAuth, async (req, res) => {
+  if (req.user.email !== ADMIN_EMAIL)
+    return res.status(403).json({ error: 'Acesso negado' });
+  try {
+    const result = await db.execute(
+      'SELECT id, name, email, created_at FROM users ORDER BY name ASC'
+    );
+    res.json({ users: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
+// DELETE um usuário específico (admin, não pode se auto-deletar)
+router.delete('/users/:userId', requireAuth, async (req, res) => {
+  if (req.user.email !== ADMIN_EMAIL)
+    return res.status(403).json({ error: 'Acesso negado' });
+  if (String(req.params.userId) === String(req.user.userId))
+    return res.status(400).json({ error: 'Você não pode apagar sua própria conta' });
+  try {
+    await db.execute({ sql: 'DELETE FROM predictions WHERE user_id = ?', args: [req.params.userId] });
+    await db.execute({ sql: 'DELETE FROM users WHERE id = ?', args: [req.params.userId] });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });

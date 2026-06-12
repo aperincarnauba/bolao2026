@@ -125,6 +125,18 @@ async function initDb() {
 
   await seedGames();
   await migrateGames();
+  await migrateSchema();
+}
+
+async function migrateSchema() {
+  if (USE_PG) {
+    const pool = db._pool;
+    await pool.query(`ALTER TABLE predictions ADD COLUMN IF NOT EXISTS underdog_value FLOAT DEFAULT 0`);
+  } else {
+    try {
+      await db.execute(`ALTER TABLE predictions ADD COLUMN underdog_value REAL DEFAULT 0`);
+    } catch (_) { /* column already exists */ }
+  }
 }
 
 // ── Seed ──────────────────────────────────────────────────────────────────────

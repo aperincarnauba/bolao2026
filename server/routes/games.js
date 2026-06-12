@@ -1,6 +1,7 @@
 const express = require('express');
 const { db } = require('../db');
 const { requireAuth, optionalAuth } = require('../middleware/auth');
+const { recalcGame } = require('../scoring');
 
 const router = express.Router();
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'aperincarnauba@gmail.com';
@@ -95,18 +96,8 @@ router.post('/:id/result', requireAuth, async (req, res) => {
       args: [home_score, away_score, req.params.id],
     });
 
-    const actualResult = Math.sign(home_score - away_score);
-    const predsRes = await db.execute({ sql: 'SELECT * FROM predictions WHERE game_id = ?', args: [req.params.id] });
-
-    for (const p of predsRes.rows) {
-      const predResult = Math.sign(Number(p.home_score) - Number(p.away_score));
-      let pts = 0;
-      if (predResult === actualResult) pts += 1;
-      if (Number(p.home_score) === home_score && Number(p.away_score) === away_score) pts += 1;
-      await db.execute({ sql: 'UPDATE predictions SET points_awarded = ? WHERE id = ?', args: [pts, p.id] });
-    }
-
-    res.json({ success: true, updated_predictions: predsRes.rows.length });
+    const updated = await recalcGame(Number(req.params.id));
+    res.json({ success: true, updated_predictions: updated });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro interno' });

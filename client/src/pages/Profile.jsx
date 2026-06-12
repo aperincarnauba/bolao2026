@@ -17,7 +17,7 @@ function SyncStatusBadge({ status }) {
 export default function Profile() {
   const { user, logout } = useAuth()
   const queryClient = useQueryClient()
-  const [adminTab, setAdminTab] = useState('resultado') // 'resultado' | 'palpites'
+  const [adminTab, setAdminTab] = useState('resultado') // 'resultado' | 'palpites' | 'usuarios'
   const [adminGame, setAdminGame] = useState(null)
   const [adminScore, setAdminScore] = useState({ home: '', away: '' })
   const [adminMsg, setAdminMsg] = useState('')
@@ -27,6 +27,8 @@ export default function Profile() {
   const [predsData, setPredsData] = useState(null)
   const [predsEdits, setPredsEdits] = useState({})
   const [predsMsg, setPredsMsg] = useState('')
+  const [usersList, setUsersList] = useState(null)
+  const [deletingUser, setDeletingUser] = useState(null)
 
   const { data: games = [] } = useQuery({
     queryKey: ['games'],
@@ -74,6 +76,27 @@ export default function Profile() {
       queryClient.invalidateQueries({ queryKey: ['leaderboard'] })
     } catch (err) {
       setPredsMsg(err.response?.data?.error || 'Erro ao salvar')
+    }
+  }
+
+  async function loadUsers() {
+    setUsersList(null)
+    const res = await api.get('/admin/users')
+    setUsersList(res.data.users)
+  }
+
+  async function deleteUser(u) {
+    if (!window.confirm(`Apagar "${u.name}" (${u.email})?\n\nTodos os palpites desta pessoa serão removidos.`)) return
+    if (!window.confirm(`Confirme: apagar definitivamente o usuário "${u.name}"?`)) return
+    setDeletingUser(u.id)
+    try {
+      await api.delete(`/admin/users/${u.id}`)
+      setUsersList(prev => prev.filter(x => x.id !== u.id))
+      queryClient.invalidateQueries({ queryKey: ['leaderboard'] })
+    } catch (err) {
+      setAdminMsg(err.response?.data?.error || 'Erro ao apagar usuário')
+    } finally {
+      setDeletingUser(null)
     }
   }
 
@@ -215,11 +238,14 @@ export default function Profile() {
           )}
 
           {/* Abas */}
-          <div className="flex gap-1 mb-3">
-            {['resultado', 'palpites'].map(tab => (
-              <button key={tab} onClick={() => { setAdminTab(tab); setAdminGame(null); setPredsGame(null); setAdminMsg(''); setPredsMsg('') }}
+          <div className="flex gap-1 mb-3 flex-wrap">
+            {['resultado', 'palpites', 'usuarios'].map(tab => (
+              <button key={tab} onClick={() => {
+                setAdminTab(tab); setAdminGame(null); setPredsGame(null); setAdminMsg(''); setPredsMsg('')
+                if (tab === 'usuarios') loadUsers()
+              }}
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${adminTab === tab ? 'bg-copa-blue text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
-                {tab === 'resultado' ? 'Inserir Resultado' : 'Ver/Editar Palpites'}
+                {tab === 'resultado' ? 'Inserir Resultado' : tab === 'palpites' ? 'Ver/Editar Palpites' : 'Usuários'}
               </button>
             ))}
           </div>
@@ -308,6 +334,34 @@ export default function Profile() {
             )}
             {predsGame && !predsData && (
               <p className="text-xs text-gray-400 text-center py-4">Carregando...</p>
+            )}
+          </>)}
+
+          {/* Aba Usuários */}
+          {adminTab === 'usuarios' && (<>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Gerenciar participantes:</p>
+            {!usersList ? (
+              <p className="text-xs text-gray-400 text-center py-4">Carregando...</p>
+            ) : usersList.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-4">Nenhum usuário cadastrado.</p>
+            ) : (
+              <div className="space-y-1 max-h-64 overflow-y-auto">
+                {usersList.map(u => (
+                  <div key={u.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate dark:text-gray-200">{u.name}</p>
+                      <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                    </div>
+                    <button
+                      onClick={() => deleteUser(u)}
+                      disabled={deletingUser === u.id}
+                      className="text-xs bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400 px-2 py-1 rounded font-semibold hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 transition-colors shrink-0"
+                    >
+                      {deletingUser === u.id ? '...' : 'Apagar'}
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
           </>)}
         </div>

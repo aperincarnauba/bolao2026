@@ -1,4 +1,5 @@
 const { db } = require('./db');
+const { recalcGame } = require('./scoring');
 
 // Maps football-data.org English team names → Portuguese names stored in our DB
 const TEAM_MAP = {
@@ -78,23 +79,7 @@ async function applyResult(gameId, homeScore, awayScore) {
     sql: "UPDATE games SET home_score = ?, away_score = ?, status = 'finished' WHERE id = ?",
     args: [homeScore, awayScore, gameId],
   });
-
-  const actualResult = Math.sign(homeScore - awayScore);
-  const predsRes = await db.execute({
-    sql: 'SELECT * FROM predictions WHERE game_id = ?',
-    args: [gameId],
-  });
-
-  for (const p of predsRes.rows) {
-    const predResult = Math.sign(Number(p.home_score) - Number(p.away_score));
-    let pts = 0;
-    if (predResult === actualResult) pts += 1;
-    if (Number(p.home_score) === homeScore && Number(p.away_score) === awayScore) pts += 1;
-    await db.execute({
-      sql: 'UPDATE predictions SET points_awarded = ? WHERE id = ?',
-      args: [pts, p.id],
-    });
-  }
+  await recalcGame(gameId);
 }
 
 async function syncResults() {
