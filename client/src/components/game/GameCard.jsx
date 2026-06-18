@@ -68,8 +68,16 @@ export default function GameCard({ game }) {
   // Live: from kickoff to kickoff+2h (refreshed automatically by React Query 10s interval)
   const now = new Date()
   const matchStart = new Date(game.match_time)
-  const isLive = !isFinished && now >= matchStart && now <= new Date(matchStart.getTime() + 2 * 60 * 60 * 1000)
   const elapsedMinutes = isLive ? Math.floor((now - matchStart) / 60000) : 0
+  const isLive = !isFinished && now >= matchStart && now <= new Date(matchStart.getTime() + 2 * 60 * 60 * 1000)
+
+  // Football time display: 1st half (0-45'), halftime (45-60 elapsed), 2nd half (46-90')
+  function matchTimeDisplay(elapsed) {
+    if (elapsed <= 45) return `${elapsed}'`
+    if (elapsed < 60) return 'Intervalo'
+    const t = elapsed - 14 // 60→46', 104→90'
+    return t <= 90 ? `${t}'` : '90\''
+  }
 
   return (
     <div className={`card p-4 transition-all ${isLive ? 'ring-2 ring-red-400 dark:ring-red-500' : isLocked && !isFinished ? 'opacity-80' : ''}`}>
@@ -108,7 +116,7 @@ export default function GameCard({ game }) {
         </div>
         <span className="text-xs text-right shrink-0 ml-2">
           {isLive
-            ? <span className="font-bold text-red-500 dark:text-red-400">{elapsedMinutes}'</span>
+            ? <span className="font-bold text-red-500 dark:text-red-400">{matchTimeDisplay(elapsedMinutes)}</span>
             : <span className="text-gray-400 dark:text-gray-500">{formatBRT(game.match_time)}</span>
           }
         </span>
