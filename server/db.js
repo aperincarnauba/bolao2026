@@ -171,7 +171,7 @@ async function seedGames() {
     { stage:'group', group_name:'K', home_team:'Portugal',        away_team:'RD Congo',       match_time:'2026-06-17T14:00:00-03:00', cidade:'Houston' },
     { stage:'group', group_name:'L', home_team:'Inglaterra',      away_team:'Croácia',        match_time:'2026-06-17T17:00:00-03:00', cidade:'Dallas' },
     { stage:'group', group_name:'L', home_team:'Gana',            away_team:'Panamá',         match_time:'2026-06-17T20:00:00-03:00', cidade:'Toronto' },
-    { stage:'group', group_name:'K', home_team:'Uzbequistão',     away_team:'Colômbia',       match_time:'2026-06-17T21:00:00-03:00', cidade:'Cidade do México' },
+    { stage:'group', group_name:'K', home_team:'Uzbequistão',     away_team:'Colômbia',       match_time:'2026-06-17T23:00:00-03:00', cidade:'Cidade do México' },
     // ══════════ 2ª RODADA — 18 a 23 de junho ══════════
     { stage:'group', group_name:'A', home_team:'República Tcheca', away_team:'África do Sul',       match_time:'2026-06-18T13:00:00-03:00', cidade:'Atlanta' },
     { stage:'group', group_name:'B', home_team:'Suíça',           away_team:'Bósnia e Herzegovina',match_time:'2026-06-18T16:00:00-03:00', cidade:'Los Angeles' },
@@ -246,7 +246,7 @@ async function migrateGames() {
     { sql: "UPDATE games SET match_time = '2026-06-14T01:00:00-03:00' WHERE home_team = 'Austrália' AND away_team = 'Turquia' AND match_time != '2026-06-14T01:00:00-03:00'" },
     { sql: "UPDATE games SET match_time = '2026-06-14T23:00:00-03:00' WHERE home_team = 'Suécia' AND away_team = 'Tunísia' AND match_time != '2026-06-14T23:00:00-03:00'" },
     { sql: "UPDATE games SET match_time = '2026-06-16T22:00:00-03:00' WHERE home_team = 'Argentina' AND away_team = 'Argélia' AND match_time != '2026-06-16T22:00:00-03:00'" },
-    { sql: "UPDATE games SET match_time = '2026-06-17T21:00:00-03:00' WHERE home_team = 'Uzbequistão' AND away_team = 'Colômbia' AND match_time != '2026-06-17T21:00:00-03:00'" },
+    { sql: "UPDATE games SET match_time = '2026-06-17T23:00:00-03:00' WHERE home_team = 'Uzbequistão' AND away_team = 'Colômbia' AND match_time != '2026-06-17T23:00:00-03:00'" },
     { sql: "UPDATE games SET match_time = '2026-06-20T23:00:00-03:00' WHERE home_team = 'Tunísia' AND away_team = 'Japão' AND match_time != '2026-06-20T23:00:00-03:00'" },
     { sql: "UPDATE games SET match_time = '2026-06-26T16:00:00-03:00' WHERE home_team = 'Noruega' AND away_team = 'França' AND match_time != '2026-06-26T16:00:00-03:00'" },
     { sql: "UPDATE games SET match_time = '2026-06-26T16:00:00-03:00' WHERE home_team = 'Senegal' AND away_team = 'Iraque' AND match_time != '2026-06-26T16:00:00-03:00'" },
