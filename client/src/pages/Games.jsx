@@ -141,6 +141,16 @@ export default function Games() {
         ))}
       </div>
 
+      {/* Shortcut to results */}
+      {pastDays.length > 0 && (
+        <button
+          onClick={() => document.getElementById('resultados')?.scrollIntoView({ behavior: 'smooth' })}
+          className="text-xs font-semibold text-copa-blue dark:text-blue-400 underline underline-offset-2 hover:opacity-70 transition-opacity self-start"
+        >
+          ✅ Ver resultados anteriores ↓
+        </button>
+      )}
+
       {/* Group filter */}
       {stage === 'group' && (
         <div className="flex gap-1 flex-wrap">
@@ -232,7 +242,7 @@ export default function Games() {
 
           {/* ── RESULTADOS (jogos anteriores) ── */}
           {pastDays.length > 0 && (
-            <section className="mb-4">
+            <section id="resultados" className="mb-4">
               <div className="flex items-center gap-2 px-1 mb-3">
                 <span className="text-sm font-extrabold bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full">
                   ✅ RESULTADOS
