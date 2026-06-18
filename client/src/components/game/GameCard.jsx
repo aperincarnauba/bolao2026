@@ -68,14 +68,14 @@ export default function GameCard({ game }) {
   // Live: from kickoff to kickoff+2h (refreshed automatically by React Query 10s interval)
   const now = new Date()
   const matchStart = new Date(game.match_time)
-  const elapsedMinutes = isLive ? Math.floor((now - matchStart) / 60000) : 0
   const isLive = !isFinished && now >= matchStart && now <= new Date(matchStart.getTime() + 2 * 60 * 60 * 1000)
+  const elapsedMinutes = isLive ? Math.floor((now - matchStart) / 60000) : 0
 
-  // Football time display: 1st half (0-45'), halftime (45-60 elapsed), 2nd half (46-90')
+  // Football time: 1st half (0-45'), halftime break (46-59 elapsed), 2nd half (60-104 elapsed → 46-90')
   function matchTimeDisplay(elapsed) {
     if (elapsed <= 45) return `${elapsed}'`
     if (elapsed < 60) return 'Intervalo'
-    const t = elapsed - 14 // 60→46', 104→90'
+    const t = elapsed - 14 // elapsed 60 → 46', elapsed 104 → 90'
     return t <= 90 ? `${t}'` : '90\''
   }
 

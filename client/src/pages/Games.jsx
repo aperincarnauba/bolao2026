@@ -61,13 +61,21 @@ export default function Games() {
 
   const days = useMemo(() => groupByDay(filtered), [filtered])
 
-  const todayCmp = keyCmp(todayKey)
+  const todayCmp    = keyCmp(todayKey)
   const tomorrowCmp = keyCmp(tomorrowKey)
 
   const todayDay    = days.find(d => d.key === todayKey)
   const tomorrowDay = days.find(d => d.key === tomorrowKey)
   const pastDays    = days.filter(d => keyCmp(d.key) < todayCmp)
   const futureDays  = days.filter(d => keyCmp(d.key) > tomorrowCmp)
+
+  // Live games pinned to top (2h window after kickoff)
+  const now2 = new Date()
+  const liveGames = useMemo(() => filtered.filter(g => {
+    if (g.status === 'finished') return false
+    const start = new Date(g.match_time)
+    return now2 >= start && now2 <= new Date(start.getTime() + 2 * 60 * 60 * 1000)
+  }), [filtered])
 
   const totalPastGames = pastDays.reduce((n, d) => n + d.games.length, 0)
 
@@ -159,6 +167,21 @@ export default function Games() {
         <div className="card p-6 text-center text-gray-500 dark:text-gray-400">Nenhum jogo encontrado</div>
       ) : (
         <div className="space-y-1">
+
+          {/* ── EM ANDAMENTO (pinned) ── */}
+          {liveGames.length > 0 && (
+            <section className="mb-4">
+              <div className="flex items-center gap-2 px-1 mb-3">
+                <span className="text-sm font-extrabold bg-red-500 text-white px-3 py-1 rounded-full flex items-center gap-2">
+                  <span className="live-pulse inline-block w-2 h-2 rounded-full bg-white shrink-0" />
+                  EM ANDAMENTO
+                </span>
+              </div>
+              <div className="space-y-3">
+                {liveGames.map(g => <GameCard key={g.id} game={g} />)}
+              </div>
+            </section>
+          )}
 
           {/* ── HOJE ── */}
           {todayDay && (

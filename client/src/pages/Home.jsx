@@ -26,6 +26,13 @@ export default function Home() {
   const { data: games = [] } = useGames()
   const { data: leaderboard = [] } = useLeaderboard()
 
+  const now = new Date()
+  const liveGames = games.filter(g => {
+    if (g.status === 'finished') return false
+    const start = new Date(g.match_time)
+    return now >= start && now <= new Date(start.getTime() + 2 * 60 * 60 * 1000)
+  })
+
   const upcoming = games
     .filter(g => !g.locked && g.status === 'scheduled')
     .slice(0, 3)
@@ -64,6 +71,47 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Live games pinned */}
+      {liveGames.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="font-bold text-lg dark:text-gray-100 flex items-center gap-2">
+              <span className="live-pulse inline-block w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
+              Em andamento
+            </h3>
+          </div>
+          <div className="space-y-3">
+            {liveGames.map(game => (
+              <Link to="/games" key={game.id}>
+                <div className="card p-4 ring-2 ring-red-400 dark:ring-red-500 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-center text-xs mb-2">
+                    <span className="bg-red-500 text-white px-2 py-0.5 rounded-full font-medium">
+                      {game.stage === 'group' ? `Grupo ${game.group_name}` : game.stage}
+                    </span>
+                    <span className="font-bold text-red-500 dark:text-red-400">
+                      {(() => {
+                        const e = Math.floor((now - new Date(game.match_time)) / 60000)
+                        if (e <= 45) return `${e}'`
+                        if (e < 60) return 'Intervalo'
+                        const t = e - 14
+                        return t <= 90 ? `${t}'` : '90\''
+                      })()}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FlagImg name={game.home_team} />
+                    <span className="font-semibold text-sm flex-1 dark:text-gray-200">{game.home_team}</span>
+                    <span className="text-gray-400 dark:text-gray-600 font-bold shrink-0">×</span>
+                    <span className="font-semibold text-sm flex-1 text-right dark:text-gray-200">{game.away_team}</span>
+                    <FlagImg name={game.away_team} />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Next games */}
       <div>
