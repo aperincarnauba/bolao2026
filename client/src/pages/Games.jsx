@@ -41,7 +41,6 @@ function groupByDay(games) {
 export default function Games() {
   const [stage, setStage] = useState('all')
   const [group, setGroup] = useState('A')
-  const [showPast, setShowPast] = useState(false)
   const [collapsed, setCollapsed] = useState(new Set())
 
   const { data: games = [], isLoading } = useQuery({
@@ -231,22 +230,18 @@ export default function Games() {
             </section>
           )}
 
-          {/* ── JOGOS ANTERIORES ── */}
+          {/* ── RESULTADOS (jogos anteriores) ── */}
           {pastDays.length > 0 && (
-            <section className="pt-1">
-              <button
-                onClick={() => setShowPast(p => !p)}
-                className="w-full text-xs text-gray-400 dark:text-gray-500 font-semibold flex items-center justify-center gap-1 py-2 hover:opacity-70 transition-opacity"
-              >
-                {showPast
-                  ? 'Ocultar jogos anteriores ▲'
-                  : `Ver ${totalPastGames} jogo${totalPastGames !== 1 ? 's' : ''} anteriores ▼`}
-              </button>
-              {showPast && (
-                <div className="space-y-2 mt-1">
-                  {pastDays.map(day => <DayBlock key={day.key} day={day} />)}
-                </div>
-              )}
+            <section className="mb-4">
+              <div className="flex items-center gap-2 px-1 mb-3">
+                <span className="text-sm font-extrabold bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full">
+                  ✅ RESULTADOS
+                </span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">{totalPastGames} jogos</span>
+              </div>
+              <div className="space-y-2">
+                {[...pastDays].reverse().map(day => <DayBlock key={day.key} day={day} />)}
+              </div>
             </section>
           )}
 
