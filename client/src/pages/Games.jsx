@@ -6,6 +6,7 @@ import GroupStandings from '../components/game/GroupStandings'
 
 const STAGES = [
   { key: 'all', label: 'Todos' },
+  { key: 'results', label: 'Resultados' },
   { key: 'group', label: 'Grupos' },
   { key: 'r32', label: 'Oitavas' },
 ]
@@ -52,7 +53,10 @@ export default function Games() {
   const todayKey = dateKey(new Date().toISOString())
   const tomorrowKey = dateKey(new Date(Date.now() + 86400000).toISOString())
 
+  const now = new Date()
+
   const filtered = useMemo(() => {
+    if (stage === 'results') return games.filter(g => new Date(g.match_time) <= now)
     if (stage === 'group') return games.filter(g => g.stage === 'group' && g.group_name === group)
     if (stage === 'r32') return games.filter(g => g.stage === 'r32')
     return games
@@ -137,19 +141,12 @@ export default function Games() {
           >
             {s.label}
             {s.key === 'all' && <span className="ml-1 text-xs opacity-60">({games.length})</span>}
+            {s.key === 'results' && <span className="ml-1 text-xs opacity-60">({games.filter(g => new Date(g.match_time) <= now).length})</span>}
           </button>
         ))}
       </div>
 
-      {/* Shortcut to results */}
-      {pastDays.length > 0 && (
-        <button
-          onClick={() => document.getElementById('resultados')?.scrollIntoView({ behavior: 'smooth' })}
-          className="text-xs font-semibold text-copa-blue dark:text-blue-400 underline underline-offset-2 hover:opacity-70 transition-opacity self-start"
-        >
-          ✅ Ver resultados anteriores ↓
-        </button>
-      )}
+
 
       {/* Group filter */}
       {stage === 'group' && (
@@ -172,9 +169,18 @@ export default function Games() {
 
       {stage === 'group' && <GroupStandings games={games} groupName={group} />}
 
-      {filtered.length === 0 ? (
+      {/* ── RESULTADOS: vista própria, mais recente primeiro ── */}
+      {stage === 'results' && (
+        filtered.length === 0
+          ? <div className="card p-6 text-center text-gray-500 dark:text-gray-400">Nenhum resultado ainda</div>
+          : <div className="space-y-2">
+              {[...days].reverse().map(day => <DayBlock key={day.key} day={day} />)}
+            </div>
+      )}
+
+      {stage !== 'results' && filtered.length === 0 ? (
         <div className="card p-6 text-center text-gray-500 dark:text-gray-400">Nenhum jogo encontrado</div>
-      ) : (
+      ) : stage !== 'results' && (
         <div className="space-y-1">
 
           {/* ── EM ANDAMENTO (pinned) ── */}
@@ -255,12 +261,6 @@ export default function Games() {
             </section>
           )}
 
-          {/* Fallback: no section matched (edge case — e.g. only past days today=past) */}
-          {!todayDay && !tomorrowDay && futureDays.length === 0 && pastDays.length === 0 && (
-            <div className="space-y-2">
-              {days.map(day => <DayBlock key={day.key} day={day} />)}
-            </div>
-          )}
         </div>
       )}
     </div>
