@@ -12,50 +12,64 @@ const STAGES = [
 
 const GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
 
-function getDateKey(isoString) {
-  return new Date(isoString).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+function dateKey(iso) {
+  return new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 }
 
-function getDateLabel(isoString) {
-  const d = new Date(isoString)
+function dateLabel(iso) {
+  const d = new Date(iso)
   const weekday = d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long' })
   const date = d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit' })
   return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)}, ${date}`
 }
 
+function keyCmp(key) {
+  const [d, m, y] = key.split('/')
+  return `${y}${m}${d}` // YYYYMMDD — safe for string sort
+}
+
 function groupByDay(games) {
   const map = new Map()
   for (const g of games) {
-    const key = getDateKey(g.match_time)
-    if (!map.has(key)) map.set(key, { label: getDateLabel(g.match_time), key, games: [] })
+    const key = dateKey(g.match_time)
+    if (!map.has(key)) map.set(key, { label: dateLabel(g.match_time), key, games: [] })
     map.get(key).games.push(g)
   }
   return Array.from(map.values())
 }
 
-function todayKey() {
-  return new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-}
-
 export default function Games() {
   const [stage, setStage] = useState('all')
   const [group, setGroup] = useState('A')
+  const [showPast, setShowPast] = useState(false)
   const [collapsed, setCollapsed] = useState(new Set())
 
   const { data: games = [], isLoading } = useQuery({
     queryKey: ['games'],
     queryFn: () => api.get('/games').then(r => r.data.games),
-    refetchInterval: 60000,
+    refetchInterval: 10000,
   })
 
-  const filtered = games.filter(g => {
-    if (stage === 'group') return g.stage === 'group' && g.group_name === group
-    if (stage === 'r32') return g.stage === 'r32'
-    return true
-  })
+  const todayKey = dateKey(new Date().toISOString())
+  const tomorrowKey = dateKey(new Date(Date.now() + 86400000).toISOString())
+
+  const filtered = useMemo(() => {
+    if (stage === 'group') return games.filter(g => g.stage === 'group' && g.group_name === group)
+    if (stage === 'r32') return games.filter(g => g.stage === 'r32')
+    return games
+  }, [games, stage, group])
 
   const days = useMemo(() => groupByDay(filtered), [filtered])
-  const allCollapsed = collapsed.size === days.length && days.length > 0
+
+  const todayCmp = keyCmp(todayKey)
+  const tomorrowCmp = keyCmp(tomorrowKey)
+
+  const todayDay    = days.find(d => d.key === todayKey)
+  const tomorrowDay = days.find(d => d.key === tomorrowKey)
+  const pastDays    = days.filter(d => keyCmp(d.key) < todayCmp)
+  const futureDays  = days.filter(d => keyCmp(d.key) > tomorrowCmp)
+
+  const totalPastGames = pastDays.reduce((n, d) => n + d.games.length, 0)
 
   function toggleDay(key) {
     setCollapsed(prev => {
@@ -65,9 +79,29 @@ export default function Games() {
     })
   }
 
-  function toggleAll() {
-    if (allCollapsed) setCollapsed(new Set())
-    else setCollapsed(new Set(days.map(d => d.key)))
+  function DayBlock({ day }) {
+    const open = !collapsed.has(day.key)
+    return (
+      <div>
+        <button
+          onClick={() => toggleDay(day.key)}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-copa-blue/5 dark:bg-copa-blue/15 hover:bg-copa-blue/10 dark:hover:bg-copa-blue/20 transition-colors mb-2"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-copa-blue dark:text-blue-300">{day.label}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">
+              {day.games.length} jogo{day.games.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <span className="text-gray-400 text-xs">{open ? '▲' : '▼'}</span>
+        </button>
+        {open && (
+          <div className="space-y-3 mb-2">
+            {day.games.map(g => <GameCard key={g.id} game={g} />)}
+          </div>
+        )}
+      </div>
+    )
   }
 
   if (isLoading) {
@@ -100,7 +134,7 @@ export default function Games() {
         ))}
       </div>
 
-      {/* Group filter (A–L) */}
+      {/* Group filter */}
       {stage === 'group' && (
         <div className="flex gap-1 flex-wrap">
           {GROUPS.map(g => (
@@ -119,54 +153,86 @@ export default function Games() {
         </div>
       )}
 
-      {/* Group standings table */}
-      {stage === 'group' && (
-        <GroupStandings games={games} groupName={group} />
-      )}
+      {stage === 'group' && <GroupStandings games={games} groupName={group} />}
 
-      {/* Expand/collapse all */}
-      {days.length > 1 && (
-        <div className="flex justify-end">
-          <button onClick={toggleAll}
-            className="text-xs text-copa-blue dark:text-blue-400 font-semibold hover:opacity-70 transition-opacity">
-            {allCollapsed ? 'Abrir todos' : 'Fechar todos'}
-          </button>
-        </div>
-      )}
-
-      {/* Games grouped by day */}
       {filtered.length === 0 ? (
         <div className="card p-6 text-center text-gray-500 dark:text-gray-400">Nenhum jogo encontrado</div>
       ) : (
-        <div className="space-y-3">
-          {days.map(day => {
-            const isOpen = !collapsed.has(day.key)
-            const isToday = day.key === todayKey()
-            return (
-              <div key={day.key}>
-                {/* Day header */}
-                <button
-                  onClick={() => toggleDay(day.key)}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-copa-blue/5 dark:bg-copa-blue/15 hover:bg-copa-blue/10 dark:hover:bg-copa-blue/20 transition-colors mb-2"
-                >
-                  <div className="flex items-center gap-2">
-                    {isToday && (
-                      <span className="text-xs bg-copa-yellow text-copa-blue font-bold px-2 py-0.5 rounded-full">Hoje</span>
-                    )}
-                    <span className="text-sm font-bold text-copa-blue dark:text-blue-300">{day.label}</span>
-                    <span className="text-xs text-gray-400 dark:text-gray-500">{day.games.length} jogo{day.games.length !== 1 ? 's' : ''}</span>
-                  </div>
-                  <span className="text-gray-400 dark:text-gray-500 text-xs">{isOpen ? '▲' : '▼'}</span>
-                </button>
+        <div className="space-y-1">
 
-                {isOpen && (
-                  <div className="space-y-3">
-                    {day.games.map(game => <GameCard key={game.id} game={game} />)}
-                  </div>
-                )}
+          {/* ── HOJE ── */}
+          {todayDay && (
+            <section className="mb-4">
+              <div className="flex items-center gap-2 px-1 mb-3">
+                <span className="text-sm font-extrabold bg-copa-yellow text-copa-blue px-3 py-1 rounded-full">
+                  📅 HOJE
+                </span>
+                <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                  {todayDay.label}
+                </span>
               </div>
-            )
-          })}
+              <div className="space-y-3">
+                {todayDay.games.map(g => <GameCard key={g.id} game={g} />)}
+              </div>
+            </section>
+          )}
+
+          {/* ── AMANHÃ ── */}
+          {tomorrowDay && (
+            <section className="mb-4">
+              <div className="flex items-center gap-2 px-1 mb-3">
+                <span className="text-sm font-extrabold bg-blue-100 dark:bg-blue-900/40 text-copa-blue dark:text-blue-300 px-3 py-1 rounded-full">
+                  📅 AMANHÃ
+                </span>
+                <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                  {tomorrowDay.label}
+                </span>
+              </div>
+              <div className="space-y-3">
+                {tomorrowDay.games.map(g => <GameCard key={g.id} game={g} />)}
+              </div>
+            </section>
+          )}
+
+          {/* ── PRÓXIMOS JOGOS ── */}
+          {futureDays.length > 0 && (
+            <section className="mb-4">
+              <div className="flex items-center gap-2 px-1 mb-3">
+                <span className="text-sm font-extrabold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full">
+                  📅 PRÓXIMOS JOGOS
+                </span>
+              </div>
+              <div className="space-y-2">
+                {futureDays.map(day => <DayBlock key={day.key} day={day} />)}
+              </div>
+            </section>
+          )}
+
+          {/* ── JOGOS ANTERIORES ── */}
+          {pastDays.length > 0 && (
+            <section className="pt-1">
+              <button
+                onClick={() => setShowPast(p => !p)}
+                className="w-full text-xs text-gray-400 dark:text-gray-500 font-semibold flex items-center justify-center gap-1 py-2 hover:opacity-70 transition-opacity"
+              >
+                {showPast
+                  ? 'Ocultar jogos anteriores ▲'
+                  : `Ver ${totalPastGames} jogo${totalPastGames !== 1 ? 's' : ''} anteriores ▼`}
+              </button>
+              {showPast && (
+                <div className="space-y-2 mt-1">
+                  {pastDays.map(day => <DayBlock key={day.key} day={day} />)}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Fallback: no section matched (edge case — e.g. only past days today=past) */}
+          {!todayDay && !tomorrowDay && futureDays.length === 0 && pastDays.length === 0 && (
+            <div className="space-y-2">
+              {days.map(day => <DayBlock key={day.key} day={day} />)}
+            </div>
+          )}
         </div>
       )}
     </div>

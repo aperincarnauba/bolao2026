@@ -65,21 +65,30 @@ export default function GameCard({ game }) {
   const isBrazil = game.home_team === 'Brasil' || game.away_team === 'Brasil'
   const isKnockout = game.stage !== 'group'
 
+  // Live: from kickoff to kickoff+2h (refreshed automatically by React Query 10s interval)
+  const now = new Date()
+  const matchStart = new Date(game.match_time)
+  const isLive = !isFinished && now >= matchStart && now <= new Date(matchStart.getTime() + 2 * 60 * 60 * 1000)
+  const elapsedMinutes = isLive ? Math.floor((now - matchStart) / 60000) : 0
+
   return (
-    <div className={`card p-4 ${isLocked && !isFinished ? 'opacity-80' : ''}`}>
+    <div className={`card p-4 transition-all ${isLive ? 'ring-2 ring-red-400 dark:ring-red-500' : isLocked && !isFinished ? 'opacity-80' : ''}`}>
       {/* Header: stage + city + time + status */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 ${
               isFinished
                 ? 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                : isLive
+                ? 'bg-red-500 text-white'
                 : isLocked
                 ? 'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400'
                 : 'bg-blue-50 text-copa-blue dark:bg-blue-900/30 dark:text-blue-300'
             }`}>
+              {isLive && <span className="live-pulse inline-block w-1.5 h-1.5 rounded-full bg-white shrink-0" />}
               {stageLabel(game.stage, game.group_name)}
-              {isFinished ? ' · Encerrado' : isLocked ? ' · 🔒 Bloqueado' : ' · Aberto'}
+              {isFinished ? ' · Encerrado' : isLive ? ' · EM ANDAMENTO' : isLocked ? ' · 🔒 Bloqueado' : ' · Aberto'}
             </span>
             {/* Points badge */}
             {isBrazil && (
@@ -97,8 +106,11 @@ export default function GameCard({ game }) {
             <p className="text-xs text-gray-400 dark:text-gray-500 ml-1">{game.cidade}</p>
           )}
         </div>
-        <span className="text-xs text-gray-400 dark:text-gray-500 text-right shrink-0 ml-2">
-          {formatBRT(game.match_time)}
+        <span className="text-xs text-right shrink-0 ml-2">
+          {isLive
+            ? <span className="font-bold text-red-500 dark:text-red-400">{elapsedMinutes}'</span>
+            : <span className="text-gray-400 dark:text-gray-500">{formatBRT(game.match_time)}</span>
+          }
         </span>
       </div>
 
