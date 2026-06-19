@@ -151,7 +151,7 @@ async function seedGames() {
     { stage:'group', group_name:'A', home_team:'Coreia do Sul',   away_team:'República Tcheca',    match_time:'2026-06-11T23:00:00-03:00', cidade:'Guadalajara' },
     { stage:'group', group_name:'B', home_team:'Canadá',          away_team:'Bósnia e Herzegovina',match_time:'2026-06-12T16:00:00-03:00', cidade:'Toronto' },
     { stage:'group', group_name:'D', home_team:'Estados Unidos',  away_team:'Paraguai',       match_time:'2026-06-12T22:00:00-03:00', cidade:'Los Angeles' },
-    { stage:'group', group_name:'D', home_team:'Austrália',       away_team:'Turquia',        match_time:'2026-06-14T01:00:00-03:00', cidade:'Vancouver' },
+    { stage:'group', group_name:'D', home_team:'Austrália',       away_team:'Turquia',        match_time:'2026-06-13T01:00:00-03:00', cidade:'Vancouver' },
     { stage:'group', group_name:'B', home_team:'Catar',           away_team:'Suíça',          match_time:'2026-06-13T16:00:00-03:00', cidade:'San Francisco' },
     { stage:'group', group_name:'C', home_team:'Brasil',          away_team:'Marrocos',       match_time:'2026-06-13T19:00:00-03:00', cidade:'Nova York' },
     { stage:'group', group_name:'C', home_team:'Haiti',           away_team:'Escócia',        match_time:'2026-06-13T22:00:00-03:00', cidade:'Boston' },
@@ -243,7 +243,7 @@ async function migrateGames() {
     { sql: "UPDATE games SET home_team = 'Suécia' WHERE home_team = 'Albânia' AND group_name = 'F'" },
     { sql: "UPDATE games SET away_team = 'Suécia' WHERE away_team = 'Albânia' AND group_name = 'F'" },
     // Horários errados no seed original — corrigidos pela tabela oficial da FIFA
-    { sql: "UPDATE games SET match_time = '2026-06-14T01:00:00-03:00' WHERE home_team = 'Austrália' AND away_team = 'Turquia' AND match_time != '2026-06-14T01:00:00-03:00'" },
+    { sql: "UPDATE games SET match_time = '2026-06-13T01:00:00-03:00' WHERE home_team = 'Austrália' AND away_team = 'Turquia' AND match_time != '2026-06-13T01:00:00-03:00'" },
     { sql: "UPDATE games SET match_time = '2026-06-14T23:00:00-03:00' WHERE home_team = 'Suécia' AND away_team = 'Tunísia' AND match_time != '2026-06-14T23:00:00-03:00'" },
     { sql: "UPDATE games SET match_time = '2026-06-16T22:00:00-03:00' WHERE home_team = 'Argentina' AND away_team = 'Argélia' AND match_time != '2026-06-16T22:00:00-03:00'" },
     { sql: "UPDATE games SET match_time = '2026-06-17T23:00:00-03:00' WHERE home_team = 'Uzbequistão' AND away_team = 'Colômbia' AND match_time != '2026-06-17T23:00:00-03:00'" },
