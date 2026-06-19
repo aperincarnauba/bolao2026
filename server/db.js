@@ -244,6 +244,7 @@ async function migrateGames() {
     { sql: "UPDATE games SET away_team = 'Suécia' WHERE away_team = 'Albânia' AND group_name = 'F'" },
     // Horários errados no seed original — corrigidos pela tabela oficial da FIFA
     { sql: "UPDATE games SET match_time = '2026-06-13T01:00:00-03:00' WHERE home_team = 'Austrália' AND away_team = 'Turquia' AND match_time != '2026-06-13T01:00:00-03:00'" },
+    { sql: "UPDATE games SET match_time = '2026-06-20T00:00:00-03:00' WHERE home_team = 'Turquia' AND away_team = 'Paraguai' AND match_time != '2026-06-20T00:00:00-03:00'" },
     { sql: "UPDATE games SET match_time = '2026-06-14T23:00:00-03:00' WHERE home_team = 'Suécia' AND away_team = 'Tunísia' AND match_time != '2026-06-14T23:00:00-03:00'" },
     { sql: "UPDATE games SET match_time = '2026-06-16T22:00:00-03:00' WHERE home_team = 'Argentina' AND away_team = 'Argélia' AND match_time != '2026-06-16T22:00:00-03:00'" },
     { sql: "UPDATE games SET match_time = '2026-06-17T23:00:00-03:00' WHERE home_team = 'Uzbequistão' AND away_team = 'Colômbia' AND match_time != '2026-06-17T23:00:00-03:00'" },
