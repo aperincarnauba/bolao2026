@@ -40,7 +40,7 @@ router.get('/:userId/profile', requireAuth, async (req, res) => {
         FROM games g
         LEFT JOIN predictions p ON p.game_id = g.id AND p.user_id = ?
         WHERE g.match_time <= ?
-        ORDER BY g.match_time ASC
+        ORDER BY g.match_time DESC
       `,
       args: [userId, new Date().toISOString()],
     });
