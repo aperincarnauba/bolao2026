@@ -11,11 +11,12 @@ router.get('/', async (req, res) => {
         u.name,
         COALESCE(SUM(p.points_awarded), 0) AS total_points,
         COUNT(p.id) AS predictions_made,
-        SUM(CASE WHEN p.points_awarded = 2 THEN 1 ELSE 0 END) AS exact_scores,
-        SUM(CASE WHEN p.points_awarded >= 1 THEN 1 ELSE 0 END) AS correct_results,
+        SUM(CASE WHEN g.status = 'finished' AND p.home_score = g.home_score AND p.away_score = g.away_score THEN 1 ELSE 0 END) AS exact_scores,
+        SUM(CASE WHEN p.points_awarded > 0 THEN 1 ELSE 0 END) AS correct_results,
         COALESCE(SUM(p.underdog_value), 0) AS underdog_score
       FROM users u
       LEFT JOIN predictions p ON p.user_id = u.id
+      LEFT JOIN games g ON g.id = p.game_id
       GROUP BY u.id
       ORDER BY total_points DESC, exact_scores DESC, underdog_score DESC, predictions_made DESC
     `);
