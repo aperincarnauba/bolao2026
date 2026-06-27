@@ -17,6 +17,7 @@ app.use('/api/games', require('./routes/games'));
 app.use('/api/predictions', require('./routes/predictions'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/users', require('./routes/users'));
 
 const distPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(distPath));

@@ -1,4 +1,8 @@
+import { useNavigate } from 'react-router-dom'
+
 export default function LeaderboardTable({ data, currentUserId }) {
+  const navigate = useNavigate()
+
   return (
     <div className="card overflow-hidden">
       {/* Header */}
@@ -14,7 +18,8 @@ export default function LeaderboardTable({ data, currentUserId }) {
       {data.map((entry, i) => (
         <div
           key={entry.user_id}
-          className={`grid grid-cols-12 gap-1 px-4 py-3 items-center text-sm ${
+          onClick={() => navigate(`/player/${entry.user_id}`)}
+          className={`grid grid-cols-12 gap-1 px-4 py-3 items-center text-sm cursor-pointer ${
             i < data.length - 1 ? 'border-b border-gray-50 dark:border-gray-700' : ''
           } ${entry.user_id === currentUserId
               ? 'bg-yellow-50 dark:bg-yellow-900/20 font-semibold'

@@ -8,6 +8,7 @@ import Home from './pages/Home'
 import Games from './pages/Games'
 import Leaderboard from './pages/Leaderboard'
 import Profile from './pages/Profile'
+import PlayerProfile from './pages/PlayerProfile'
 import Rules from './pages/Rules'
 import Login from './pages/Login'
 
@@ -51,6 +52,9 @@ export default function App() {
             } />
             <Route path="/profile" element={
               <ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>
+            } />
+            <Route path="/player/:userId" element={
+              <ProtectedRoute><AppLayout><PlayerProfile /></AppLayout></ProtectedRoute>
             } />
             <Route path="/regras" element={
               <ProtectedRoute><AppLayout><Rules /></AppLayout></ProtectedRoute>
