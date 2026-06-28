@@ -315,9 +315,14 @@ function BracketSlot({ slot, queryClient, style, isFinal }) {
   const away = game?.away_team ?? t2
   const isBrazil = home === 'Brasil' || away === 'Brasil'
 
-  async function submit(e) {
-    e.preventDefault()
-    if (predH === '' || predA === '' || !game) return
+  const now = new Date()
+  const isLive = game && !isFinished && (() => {
+    const start = new Date(game.match_time)
+    return now >= start && now <= new Date(start.getTime() + 2 * 60 * 60 * 1000)
+  })()
+
+  async function autoSave() {
+    if (predH === '' || predA === '' || !game || saving) return
     setSaving(true)
     try {
       await api.post(`/predictions/${game.id}`, {
@@ -332,20 +337,50 @@ function BracketSlot({ slot, queryClient, style, isFinal }) {
     }
   }
 
-  const Outer = showForm ? 'form' : 'div'
-  const outerProps = showForm ? { onSubmit: submit } : {}
-
   return (
-    <Outer
-      {...outerProps}
+    <div
       style={style}
       className={[
         'rounded-lg border bg-white dark:bg-gray-800 shadow-sm overflow-hidden flex flex-col',
-        isBrazil
+        isLive
+          ? 'border-red-500 dark:border-red-500'
+          : isBrazil
           ? 'border-copa-yellow/70 dark:border-copa-yellow/50'
           : 'border-gray-200 dark:border-gray-700',
       ].join(' ')}
     >
+      {/* Time / LIVE header strip */}
+      {game && (
+        <div className={[
+          'flex items-center justify-between px-1.5 border-b shrink-0',
+          isLive
+            ? 'bg-red-500 border-red-500'
+            : 'bg-gray-50 dark:bg-gray-900/40 border-gray-100 dark:border-gray-700',
+        ].join(' ')} style={{ height: 14, lineHeight: '14px' }}>
+          {isLive ? (
+            <>
+              <span className="live-pulse inline-block w-1.5 h-1.5 rounded-full bg-white shrink-0" />
+              <span className="text-[9px] font-bold text-white tracking-wide">LIVE</span>
+              <span className="w-1.5" />
+            </>
+          ) : (
+            <>
+              <span className="text-[9px] text-gray-400 dark:text-gray-500 truncate">
+                {new Date(game.match_time).toLocaleString('pt-BR', {
+                  timeZone: 'America/Sao_Paulo',
+                  day: '2-digit', month: '2-digit',
+                  hour: '2-digit', minute: '2-digit',
+                  hour12: false,
+                })}
+              </span>
+              {!isFinished && (
+                <span className="text-[9px] text-gray-400 dark:text-gray-500 shrink-0 ml-1">{exactPts}p</span>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
       {/* Home row */}
       <div className="flex-1 flex items-center px-1.5 gap-1 border-b border-gray-100 dark:border-gray-700/60 min-w-0">
         {home && <FlagImg name={home} size="sm" />}
@@ -368,6 +403,7 @@ function BracketSlot({ slot, queryClient, style, isFinal }) {
             <input
               type="number" min="0" max="20" value={predH}
               onChange={e => setPredH(e.target.value)}
+              onBlur={autoSave}
               placeholder="─"
               className="w-7 h-6 text-center border border-gray-300 dark:border-gray-600 rounded text-xs font-bold dark:bg-gray-700 dark:text-white focus:outline-none focus:border-copa-blue"
             />
@@ -413,16 +449,12 @@ function BracketSlot({ slot, queryClient, style, isFinal }) {
               <input
                 type="number" min="0" max="20" value={predA}
                 onChange={e => setPredA(e.target.value)}
+                onBlur={autoSave}
                 placeholder="─"
                 className="w-7 h-6 text-center border border-gray-300 dark:border-gray-600 rounded text-xs font-bold dark:bg-gray-700 dark:text-white focus:outline-none focus:border-copa-blue"
               />
-              <button
-                type="submit"
-                disabled={saving || predH === '' || predA === ''}
-                className="w-6 h-6 bg-copa-blue text-white rounded text-[9px] font-bold hover:opacity-80 disabled:opacity-40 transition-opacity shrink-0"
-              >
-                {saved ? '✓' : saving ? '…' : '→'}
-              </button>
+              {saving && <span className="text-[8px] text-gray-400 dark:text-gray-500">…</span>}
+              {saved  && <span className="text-[8px] text-copa-green dark:text-green-400">✓</span>}
             </>
           )}
           {!game && <span className="text-gray-200 dark:text-gray-700 text-xs w-5 text-center">?</span>}
@@ -435,6 +467,6 @@ function BracketSlot({ slot, queryClient, style, isFinal }) {
           pên {game.penalty_home}×{game.penalty_away}
         </div>
       )}
-    </Outer>
+    </div>
   )
 }
