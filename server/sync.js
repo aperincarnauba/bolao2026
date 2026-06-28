@@ -1,5 +1,6 @@
 const { db } = require('./db');
 const { recalcGame } = require('./scoring');
+const { advanceKnockout } = require('./knockoutAdvance');
 
 // Maps football-data.org English team names → Portuguese names stored in our DB
 const TEAM_MAP = {
@@ -172,6 +173,7 @@ async function syncResults() {
 
     if (updated > 0) {
       console.log(`[Sync] ${updated} jogo(s) atualizado(s) automaticamente`);
+      await advanceKnockout();
     }
 
     return { updated, status: 'ok' };
