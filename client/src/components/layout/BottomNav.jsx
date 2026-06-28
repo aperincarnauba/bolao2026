@@ -4,9 +4,9 @@ import { useTheme } from '../../context/ThemeContext'
 const ITEMS = [
   { to: '/', icon: '🏠', label: 'Início' },
   { to: '/games', icon: '⚽', label: 'Jogos' },
+  { to: '/knockout', icon: '🏅', label: 'Mata-Mata' },
   { to: '/leaderboard', icon: '🏆', label: 'Ranking' },
   { to: '/profile', icon: '👤', label: 'Perfil' },
-  { to: '/regras', icon: '📋', label: 'Regras' },
 ]
 
 export default function BottomNav() {

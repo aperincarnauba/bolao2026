@@ -83,10 +83,10 @@ function mapTeam(name) {
   return TEAM_MAP[name] || name;
 }
 
-async function applyResult(gameId, homeScore, awayScore) {
+async function applyResult(gameId, homeScore, awayScore, penaltyHome = null, penaltyAway = null) {
   await db.execute({
-    sql: "UPDATE games SET home_score = ?, away_score = ?, status = 'finished' WHERE id = ?",
-    args: [homeScore, awayScore, gameId],
+    sql: "UPDATE games SET home_score = ?, away_score = ?, penalty_home = ?, penalty_away = ?, status = 'finished' WHERE id = ?",
+    args: [homeScore, awayScore, penaltyHome, penaltyAway, gameId],
   });
   await recalcGame(gameId);
 }
@@ -134,8 +134,21 @@ async function syncResults() {
     for (const match of matches) {
       const homeTeam = mapTeam(match.homeTeam.name);
       const awayTeam = mapTeam(match.awayTeam.name);
-      const homeScore = match.score?.fullTime?.home;
-      const awayScore = match.score?.fullTime?.away;
+
+      const duration = match.score?.duration;
+      let homeScore, awayScore, penaltyHome = null, penaltyAway = null;
+
+      if (duration === 'PENALTY_SHOOTOUT') {
+        // Placar nos 90 min (o que conta para os palpites)
+        homeScore = match.score?.regularTime?.home ?? match.score?.fullTime?.home;
+        awayScore = match.score?.regularTime?.away ?? match.score?.fullTime?.away;
+        penaltyHome = match.score?.penalties?.home ?? null;
+        penaltyAway = match.score?.penalties?.away ?? null;
+      } else {
+        // REGULAR ou EXTRA_TIME: fullTime tem o resultado final
+        homeScore = match.score?.fullTime?.home;
+        awayScore = match.score?.fullTime?.away;
+      }
 
       if (homeScore === null || homeScore === undefined) continue;
       if (awayScore === null || awayScore === undefined) continue;
@@ -149,7 +162,7 @@ async function syncResults() {
       if (found.rows.length === 0) continue;
 
       const gameId = Number(found.rows[0].id);
-      await applyResult(gameId, homeScore, awayScore);
+      await applyResult(gameId, homeScore, awayScore, penaltyHome, penaltyAway);
       updated++;
     }
 

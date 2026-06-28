@@ -9,6 +9,7 @@ import Games from './pages/Games'
 import Leaderboard from './pages/Leaderboard'
 import Profile from './pages/Profile'
 import PlayerProfile from './pages/PlayerProfile'
+import Knockout from './pages/Knockout'
 import Rules from './pages/Rules'
 import Login from './pages/Login'
 
@@ -55,6 +56,9 @@ export default function App() {
             } />
             <Route path="/player/:userId" element={
               <ProtectedRoute><AppLayout><PlayerProfile /></AppLayout></ProtectedRoute>
+            } />
+            <Route path="/knockout" element={
+              <ProtectedRoute><AppLayout><Knockout /></AppLayout></ProtectedRoute>
             } />
             <Route path="/regras" element={
               <ProtectedRoute><AppLayout><Rules /></AppLayout></ProtectedRoute>

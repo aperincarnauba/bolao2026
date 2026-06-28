@@ -137,6 +137,11 @@ export default function GameCard({ game }) {
               <p className="text-2xl font-extrabold dark:text-white">
                 {game.home_score} <span className="text-gray-300 dark:text-gray-600">×</span> {game.away_score}
               </p>
+              {game.penalty_home !== null && (
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                  Pênaltis: {game.penalty_home} × {game.penalty_away}
+                </p>
+              )}
               {prediction && (
                 <div className={`mt-1 text-xs px-2 py-0.5 rounded-full font-bold ${ptsBadgeClass(pts, maxPts)}`}>
                   {ptsLabel(pts, maxPts)}

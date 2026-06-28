@@ -8,7 +8,7 @@ const STAGES = [
   { key: 'all', label: 'Todos' },
   { key: 'results', label: 'Resultados' },
   { key: 'group', label: 'Grupos' },
-  { key: 'r32', label: 'Oitavas' },
+  { key: 'r32', label: '16-avos' },
 ]
 
 const GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']

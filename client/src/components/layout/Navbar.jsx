@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext'
 const LINKS = [
   { to: '/', label: 'Início' },
   { to: '/games', label: 'Jogos' },
+  { to: '/knockout', label: 'Mata-Mata' },
   { to: '/leaderboard', label: 'Ranking' },
   { to: '/profile', label: 'Perfil' },
   { to: '/regras', label: 'Regras' },

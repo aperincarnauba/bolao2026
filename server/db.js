@@ -126,6 +126,7 @@ async function initDb() {
   await seedGames();
   await migrateGames();
   await migrateSchema();
+  await migrateKnockout();
 }
 
 async function migrateSchema() {
@@ -262,6 +263,49 @@ async function migrateGames() {
     const r = await db.execute(fix.sql);
     if (r.rowsAffected > 0) console.log(`[migrate] ${r.rowsAffected} row(s): ${fix.sql.slice(0, 60)}`);
   }
+}
+
+async function migrateKnockout() {
+  if (USE_PG) {
+    const pool = db._pool;
+    await pool.query(`ALTER TABLE games ADD COLUMN IF NOT EXISTS penalty_home INTEGER`);
+    await pool.query(`ALTER TABLE games ADD COLUMN IF NOT EXISTS penalty_away INTEGER`);
+  } else {
+    try { await db.execute(`ALTER TABLE games ADD COLUMN penalty_home INTEGER`) } catch (_) {}
+    try { await db.execute(`ALTER TABLE games ADD COLUMN penalty_away INTEGER`) } catch (_) {}
+  }
+
+  const check = await db.execute("SELECT COUNT(*) as c FROM games WHERE stage = 'r32'");
+  if (Number(check.rows[0].c) > 0) return;
+
+  const r32 = [
+    // Chave A (esquerda)
+    { home: 'África do Sul',        away: 'Canadá',                time: '2026-06-28T16:00:00-03:00', cidade: 'Los Angeles'    },
+    { home: 'Alemanha',             away: 'Paraguai',              time: '2026-06-29T17:30:00-03:00', cidade: 'Boston'         },
+    { home: 'Holanda',              away: 'Marrocos',              time: '2026-06-29T22:00:00-03:00', cidade: 'Monterrey'      },
+    { home: 'França',               away: 'Suécia',                time: '2026-06-30T18:00:00-03:00', cidade: 'Nova York'      },
+    { home: 'Portugal',             away: 'Croácia',               time: '2026-07-02T20:00:00-03:00', cidade: 'Toronto'        },
+    { home: 'Espanha',              away: 'Áustria',               time: '2026-07-02T16:00:00-03:00', cidade: 'Los Angeles'    },
+    { home: 'Estados Unidos',       away: 'Bósnia e Herzegovina',  time: '2026-07-01T21:00:00-03:00', cidade: 'San Francisco'  },
+    { home: 'Bélgica',             away: 'Senegal',                time: '2026-07-01T17:00:00-03:00', cidade: 'Seattle'        },
+    // Chave B (direita — Brasil)
+    { home: 'Brasil',               away: 'Japão',                 time: '2026-06-29T14:00:00-03:00', cidade: 'Houston'        },
+    { home: 'Costa do Marfim',     away: 'Noruega',                time: '2026-06-30T14:00:00-03:00', cidade: 'Dallas'         },
+    { home: 'México',               away: 'Equador',               time: '2026-06-30T22:00:00-03:00', cidade: 'Cidade do México'},
+    { home: 'Inglaterra',           away: 'RD Congo',              time: '2026-07-01T13:00:00-03:00', cidade: 'Atlanta'        },
+    { home: 'Argentina',            away: 'Cabo Verde',            time: '2026-07-03T19:00:00-03:00', cidade: 'Miami'          },
+    { home: 'Austrália',           away: 'Egito',                  time: '2026-07-03T15:00:00-03:00', cidade: 'Dallas'         },
+    { home: 'Suíça',               away: 'Argélia',                time: '2026-07-03T00:00:00-03:00', cidade: 'Vancouver'      },
+    { home: 'Colômbia',            away: 'Gana',                   time: '2026-07-03T22:30:00-03:00', cidade: 'Kansas City'    },
+  ];
+
+  for (const g of r32) {
+    await db.execute({
+      sql: 'INSERT INTO games (stage, home_team, away_team, match_time, cidade) VALUES (?, ?, ?, ?, ?)',
+      args: ['r32', g.home, g.away, g.time, g.cidade],
+    });
+  }
+  console.log('[migrate] Adicionados 16 jogos do mata-mata (16-avos)');
 }
 
 module.exports = { db, initDb };

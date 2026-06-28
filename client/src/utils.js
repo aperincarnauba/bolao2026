@@ -11,10 +11,10 @@ export function formatBRT(isoString) {
 
 export function stageLabel(stage, groupName) {
   if (stage === 'group') return `Grupo ${groupName}`
-  if (stage === 'r32') return 'Oitavas'
-  if (stage === 'r16') return 'Quartas'
-  if (stage === 'qf') return 'Semi'
-  if (stage === 'sf') return 'Final'
+  if (stage === 'r32') return '16-avos'
+  if (stage === 'r16') return 'Oitavas'
+  if (stage === 'qf') return 'Quartas'
+  if (stage === 'sf') return 'Semi'
   if (stage === 'final') return 'Final'
   return stage
 }

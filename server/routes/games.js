@@ -21,6 +21,8 @@ function rowToGame(row) {
     cidade: row.cidade || null,
     home_score: row.home_score !== null ? Number(row.home_score) : null,
     away_score: row.away_score !== null ? Number(row.away_score) : null,
+    penalty_home: row.penalty_home != null ? Number(row.penalty_home) : null,
+    penalty_away: row.penalty_away != null ? Number(row.penalty_away) : null,
     status: row.status,
     locked: isLocked(row.match_time),
     user_prediction: null,
