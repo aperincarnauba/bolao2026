@@ -3,6 +3,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '../api/client'
 import { getGamePoints } from '../utils'
 import FlagImg from '../components/FlagImg'
+import { useAuth } from '../context/AuthContext'
+
+const ADMIN_EMAIL = 'aperincarnauba@gmail.com'
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 const CW = 130       // card width
@@ -296,15 +299,78 @@ export default function Knockout() {
 // ── Bracket slot card ─────────────────────────────────────────────────────────
 function BracketSlot({ slot, queryClient, style, isFinal }) {
   const { game, t1, t2 } = slot
+  const { user } = useAuth()
+  const isAdmin = user?.email === ADMIN_EMAIL
+
   const pred = game?.user_prediction
   const [predH, setPredH] = useState(() => pred != null ? String(pred.home_score) : '')
   const [predA, setPredA] = useState(() => pred != null ? String(pred.away_score) : '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
+  const [penEdit, setPenEdit] = useState(false)
+  const [penH, setPenH] = useState('')
+  const [penA, setPenA] = useState('')
+  const [penSaving, setPenSaving] = useState(false)
+
   const isFinished = game?.status === 'finished'
   const isLocked   = game?.locked
   const showForm   = !!(game && !isFinished && !isLocked)
+
+  const isTied = isFinished && game &&
+    Number(game.home_score) === Number(game.away_score) &&
+    game.penalty_home == null
+  const showPenBtn = isAdmin && isFinished && game
+
+  async function savePenalties(winnerHome) {
+    const ph = winnerHome
+      ? Math.max(parseInt(penH) || 0, parseInt(penA) || 0) + 1
+      : parseInt(penH) || 0
+    const pa = winnerHome
+      ? parseInt(penA) || 0
+      : Math.max(parseInt(penH) || 0, parseInt(penA) || 0) + 1
+
+    const finalPh = penH !== '' && penA !== '' ? parseInt(penH) : (winnerHome ? 1 : 0)
+    const finalPa = penH !== '' && penA !== '' ? parseInt(penA) : (winnerHome ? 0 : 1)
+
+    if (finalPh === finalPa) return
+    setPenSaving(true)
+    try {
+      await api.post(`/games/${game.id}/result`, {
+        home_score: game.home_score,
+        away_score: game.away_score,
+        penalty_home: finalPh,
+        penalty_away: finalPa,
+      })
+      queryClient.invalidateQueries({ queryKey: ['games'] })
+      setPenEdit(false)
+      setPenH('')
+      setPenA('')
+    } finally {
+      setPenSaving(false)
+    }
+  }
+
+  async function saveExactPenalties() {
+    const ph = parseInt(penH)
+    const pa = parseInt(penA)
+    if (isNaN(ph) || isNaN(pa) || ph === pa) return
+    setPenSaving(true)
+    try {
+      await api.post(`/games/${game.id}/result`, {
+        home_score: game.home_score,
+        away_score: game.away_score,
+        penalty_home: ph,
+        penalty_away: pa,
+      })
+      queryClient.invalidateQueries({ queryKey: ['games'] })
+      setPenEdit(false)
+      setPenH('')
+      setPenA('')
+    } finally {
+      setPenSaving(false)
+    }
+  }
 
   const { exactPts } = game
     ? getGamePoints(game.stage, game.home_team, game.away_team)
@@ -341,7 +407,7 @@ function BracketSlot({ slot, queryClient, style, isFinal }) {
     <div
       style={style}
       className={[
-        'rounded-lg border bg-white dark:bg-gray-800 shadow-sm overflow-hidden flex flex-col',
+        'rounded-lg border bg-white dark:bg-gray-800 shadow-sm flex flex-col relative',
         isLive
           ? 'border-red-500 dark:border-red-500'
           : isBrazil
@@ -461,10 +527,90 @@ function BracketSlot({ slot, queryClient, style, isFinal }) {
         </div>
       </div>
 
-      {/* Penalty strip */}
-      {isFinished && game.penalty_home !== null && (
-        <div className="text-center text-[8px] text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-900/30 leading-none py-0.5">
+      {/* Penalty strip / admin edit */}
+      {isFinished && game.penalty_home !== null && !penEdit && (
+        <div
+          className={[
+            'text-center text-[8px] leading-none py-0.5 flex items-center justify-center gap-1',
+            'bg-gray-50 dark:bg-gray-900/30 text-gray-400 dark:text-gray-500',
+            showPenBtn ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800' : '',
+          ].join(' ')}
+          onClick={() => showPenBtn && setPenEdit(true)}
+          title={showPenBtn ? 'Editar pênaltis' : undefined}
+        >
           pên {game.penalty_home}×{game.penalty_away}
+          {showPenBtn && <span className="opacity-40">✏️</span>}
+        </div>
+      )}
+
+      {isTied && !penEdit && showPenBtn && (
+        <div
+          className="text-center text-[8px] leading-none py-0.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/40"
+          onClick={() => setPenEdit(true)}
+        >
+          ✏️ pênaltis
+        </div>
+      )}
+
+      {/* Inline penalty editor */}
+      {penEdit && (
+        <div className="absolute left-0 right-0 z-50 bg-white dark:bg-gray-900 border border-copa-blue dark:border-blue-500 rounded-b-lg shadow-xl p-2"
+          style={{ top: '100%' }}
+        >
+          <div className="text-[9px] text-gray-500 dark:text-gray-400 mb-1.5 font-semibold text-center">Quem passou?</div>
+
+          {/* Team buttons */}
+          <div className="flex gap-1 mb-2">
+            <button
+              onClick={() => {
+                if (penH !== '' && penA !== '') saveExactPenalties()
+                else savePenalties(true)
+              }}
+              disabled={penSaving}
+              className="flex-1 text-[9px] font-bold py-1 px-1 rounded bg-copa-blue text-white hover:bg-blue-700 truncate"
+            >
+              {game.home_team}
+            </button>
+            <button
+              onClick={() => {
+                if (penH !== '' && penA !== '') saveExactPenalties()
+                else savePenalties(false)
+              }}
+              disabled={penSaving}
+              className="flex-1 text-[9px] font-bold py-1 px-1 rounded bg-copa-blue text-white hover:bg-blue-700 truncate"
+            >
+              {game.away_team}
+            </button>
+          </div>
+
+          {/* Optional: exact score */}
+          <div className="flex items-center gap-1 justify-center mb-1.5">
+            <input
+              type="number" min="0" max="20" value={penH}
+              onChange={e => setPenH(e.target.value)}
+              placeholder="0"
+              className="w-8 h-5 text-center border border-gray-300 dark:border-gray-600 rounded text-[10px] dark:bg-gray-800 dark:text-white"
+            />
+            <span className="text-[9px] text-gray-400">×</span>
+            <input
+              type="number" min="0" max="20" value={penA}
+              onChange={e => setPenA(e.target.value)}
+              placeholder="0"
+              className="w-8 h-5 text-center border border-gray-300 dark:border-gray-600 rounded text-[10px] dark:bg-gray-800 dark:text-white"
+            />
+            {penH !== '' && penA !== '' && parseInt(penH) !== parseInt(penA) && (
+              <button
+                onClick={saveExactPenalties}
+                disabled={penSaving}
+                className="text-[9px] bg-green-500 text-white rounded px-1 py-0.5"
+              >✓</button>
+            )}
+          </div>
+
+          <button
+            onClick={() => { setPenEdit(false); setPenH(''); setPenA('') }}
+            className="w-full text-[8px] text-gray-400 hover:text-gray-600"
+          >cancelar</button>
         </div>
       )}
     </div>

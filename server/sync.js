@@ -141,10 +141,18 @@ async function syncResults() {
 
       if (duration === 'PENALTY_SHOOTOUT') {
         // Placar nos 90 min (o que conta para os palpites)
-        homeScore = match.score?.regularTime?.home ?? match.score?.fullTime?.home;
-        awayScore = match.score?.regularTime?.away ?? match.score?.fullTime?.away;
-        penaltyHome = match.score?.penalties?.home ?? null;
-        penaltyAway = match.score?.penalties?.away ?? null;
+        homeScore = match.score?.regularTime?.home ?? null;
+        awayScore = match.score?.regularTime?.away ?? null;
+        const ftH = match.score?.fullTime?.home;
+        const ftA = match.score?.fullTime?.away;
+        // fullTime normalmente tem o placar dos pênaltis (ex: 4×5).
+        // Se ainda estiver empatado ou nulo, a API ainda não atualizou — pular.
+        if (ftH == null || ftA == null || ftH === ftA) {
+          console.log(`[Sync] Pênaltis incompletos na API para ${homeTeam} × ${awayTeam} — entrada manual necessária`);
+          continue;
+        }
+        penaltyHome = ftH;
+        penaltyAway = ftA;
       } else {
         // REGULAR ou EXTRA_TIME: fullTime tem o resultado final
         homeScore = match.score?.fullTime?.home;
@@ -194,4 +202,4 @@ function startSyncInterval(intervalMs = 3 * 60 * 1000) {
   setInterval(syncResults, intervalMs);
 }
 
-module.exports = { syncResults, startSyncInterval, getSyncInfo };
+module.exports = { syncResults, startSyncInterval, getSyncInfo, applyResult, mapTeam };

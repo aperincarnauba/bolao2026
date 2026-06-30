@@ -2,6 +2,7 @@ const express = require('express');
 const { db } = require('../db');
 const { requireAuth, optionalAuth } = require('../middleware/auth');
 const { recalcGame } = require('../scoring');
+const { advanceKnockout } = require('../knockoutAdvance');
 
 const router = express.Router();
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'aperincarnauba@gmail.com';
@@ -83,7 +84,7 @@ router.post('/:id/result', requireAuth, async (req, res) => {
   if (req.user.email !== ADMIN_EMAIL)
     return res.status(403).json({ error: 'Acesso negado' });
 
-  const { home_score, away_score } = req.body;
+  const { home_score, away_score, penalty_home, penalty_away } = req.body;
   if (home_score === undefined || away_score === undefined)
     return res.status(400).json({ error: 'home_score e away_score são obrigatórios' });
   if (home_score < 0 || away_score < 0)
@@ -93,12 +94,16 @@ router.post('/:id/result', requireAuth, async (req, res) => {
     const gameRes = await db.execute({ sql: 'SELECT * FROM games WHERE id = ?', args: [req.params.id] });
     if (gameRes.rows.length === 0) return res.status(404).json({ error: 'Jogo não encontrado' });
 
+    const ph = penalty_home != null ? Number(penalty_home) : null;
+    const pa = penalty_away != null ? Number(penalty_away) : null;
+
     await db.execute({
-      sql: "UPDATE games SET home_score = ?, away_score = ?, status = 'finished' WHERE id = ?",
-      args: [home_score, away_score, req.params.id],
+      sql: "UPDATE games SET home_score = ?, away_score = ?, penalty_home = ?, penalty_away = ?, status = 'finished' WHERE id = ?",
+      args: [home_score, away_score, ph, pa, req.params.id],
     });
 
     const updated = await recalcGame(Number(req.params.id));
+    await advanceKnockout();
     res.json({ success: true, updated_predictions: updated });
   } catch (err) {
     console.error(err);
