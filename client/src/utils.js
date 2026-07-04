@@ -15,6 +15,7 @@ export function stageLabel(stage, groupName) {
   if (stage === 'r16') return 'Oitavas'
   if (stage === 'qf') return 'Quartas'
   if (stage === 'sf') return 'Semi'
+  if (stage === 'third') return '3º Lugar'
   if (stage === 'final') return 'Final'
   return stage
 }

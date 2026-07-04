@@ -417,7 +417,9 @@ function BracketSlot({ slot, queryClient, style, isFinal }) {
     >
       {/* Time / LIVE header strip */}
       {game && (
-        <div className={[
+        <div
+          title={game.cidade || undefined}
+          className={[
           'flex items-center justify-between px-1.5 border-b shrink-0',
           isLive
             ? 'bg-red-500 border-red-500'

@@ -5,32 +5,33 @@ const { db } = require('./db')
 // Times in UTC (BRT = UTC-3).
 const R16_SCHEDULE = [
   // Chave A
-  { homeR32: ['Alemanha', 'Paraguai'],                    awayR32: ['França', 'Suécia'],          time: '2026-07-04T21:00:00Z' }, // 0: Oit-A1 · 04/jul 18h
-  { homeR32: ['África do Sul', 'Canadá'],                 awayR32: ['Holanda', 'Marrocos'],        time: '2026-07-04T17:00:00Z' }, // 1: Oit-A2 · 04/jul 14h
-  { homeR32: ['Portugal', 'Croácia'],                     awayR32: ['Espanha', 'Áustria'],         time: '2026-07-06T19:00:00Z' }, // 2: Oit-A3 · 06/jul 16h
-  { homeR32: ['Estados Unidos', 'Bósnia e Herzegovina'],  awayR32: ['Bélgica', 'Senegal'],         time: '2026-07-07T00:00:00Z' }, // 3: Oit-A4 · 06/jul 21h
+  { homeR32: ['Alemanha', 'Paraguai'],                    awayR32: ['França', 'Suécia'],          time: '2026-07-04T21:00:00Z', cidade: 'Filadélfia' },       // 0: Oit-A1 · 04/jul 18h — Lincoln Financial Field
+  { homeR32: ['África do Sul', 'Canadá'],                 awayR32: ['Holanda', 'Marrocos'],        time: '2026-07-04T17:00:00Z', cidade: 'Houston' },          // 1: Oit-A2 · 04/jul 14h — NRG Stadium
+  { homeR32: ['Portugal', 'Croácia'],                     awayR32: ['Espanha', 'Áustria'],         time: '2026-07-06T19:00:00Z', cidade: 'Dallas' },           // 2: Oit-A3 · 06/jul 16h — AT&T Stadium
+  { homeR32: ['Estados Unidos', 'Bósnia e Herzegovina'],  awayR32: ['Bélgica', 'Senegal'],         time: '2026-07-07T00:00:00Z', cidade: 'Seattle' },          // 3: Oit-A4 · 06/jul 21h — Lumen Field
   // Chave B
-  { homeR32: ['Brasil', 'Japão'],                         awayR32: ['Costa do Marfim', 'Noruega'], time: '2026-07-05T20:00:00Z' }, // 4: Oit-B1 · 05/jul 17h
-  { homeR32: ['México', 'Equador'],                       awayR32: ['Inglaterra', 'RD Congo'],     time: '2026-07-06T00:00:00Z' }, // 5: Oit-B2 · 05/jul 21h
-  { homeR32: ['Argentina', 'Cabo Verde'],                 awayR32: ['Austrália', 'Egito'],         time: '2026-07-07T16:00:00Z' }, // 6: Oit-B3 · 07/jul 13h
-  { homeR32: ['Suíça', 'Argélia'],                        awayR32: ['Colômbia', 'Gana'],           time: '2026-07-07T20:00:00Z' }, // 7: Oit-B4 · 07/jul 17h
+  { homeR32: ['Brasil', 'Japão'],                         awayR32: ['Costa do Marfim', 'Noruega'], time: '2026-07-05T20:00:00Z', cidade: 'Nova York' },        // 4: Oit-B1 · 05/jul 17h — MetLife Stadium
+  { homeR32: ['México', 'Equador'],                       awayR32: ['Inglaterra', 'RD Congo'],     time: '2026-07-06T00:00:00Z', cidade: 'Cidade do México' }, // 5: Oit-B2 · 05/jul 21h — Estádio Azteca
+  { homeR32: ['Argentina', 'Cabo Verde'],                 awayR32: ['Austrália', 'Egito'],         time: '2026-07-07T16:00:00Z', cidade: 'Atlanta' },          // 6: Oit-B3 · 07/jul 13h — Mercedes-Benz Stadium
+  { homeR32: ['Suíça', 'Argélia'],                        awayR32: ['Colômbia', 'Gana'],           time: '2026-07-07T20:00:00Z', cidade: 'Vancouver' },        // 7: Oit-B4 · 07/jul 17h — BC Place Stadium
 ]
 
 // QF: indexes refer to R16_SCHEDULE above
 const QF_SCHEDULE = [
-  { homeR16: 0, awayR16: 1, time: '2026-07-09T20:00:00Z' }, // QF-A · 09/jul 17h
-  { homeR16: 2, awayR16: 3, time: '2026-07-10T19:00:00Z' }, // QF-B · 10/jul 16h
-  { homeR16: 4, awayR16: 5, time: '2026-07-11T21:00:00Z' }, // QF-C · 11/jul 18h
-  { homeR16: 6, awayR16: 7, time: '2026-07-12T01:00:00Z' }, // QF-D · 11/jul 22h
+  { homeR16: 0, awayR16: 1, time: '2026-07-09T17:00:00Z' }, // QF-A · 09/jul 14h
+  { homeR16: 2, awayR16: 3, time: '2026-07-10T16:00:00Z' }, // QF-B · 10/jul 13h
+  { homeR16: 4, awayR16: 5, time: '2026-07-11T16:00:00Z' }, // QF-C · 11/jul 13h
+  { homeR16: 6, awayR16: 7, time: '2026-07-11T20:00:00Z' }, // QF-D · 11/jul 17h
 ]
 
 // SF: indexes refer to QF_SCHEDULE above
 const SF_SCHEDULE = [
-  { homeQF: 0, awayQF: 1, time: '2026-07-14T21:00:00Z' }, // SF-A (Chave A)
-  { homeQF: 2, awayQF: 3, time: '2026-07-16T00:00:00Z' }, // SF-B (Chave B / 🇧🇷)
+  { homeQF: 0, awayQF: 1, time: '2026-07-14T16:00:00Z' }, // SF-A (Chave A) · 14/jul 13h
+  { homeQF: 2, awayQF: 3, time: '2026-07-15T16:00:00Z' }, // SF-B (Chave B / 🇧🇷) · 15/jul 13h
 ]
 
-const FINAL_TIME = '2026-07-19T21:00:00Z' // MetLife Stadium
+const FINAL_TIME = '2026-07-19T16:00:00Z' // MetLife Stadium · 19/jul 13h
+const THIRD_PLACE_TIME = '2026-07-18T18:00:00Z' // Disputa de 3º lugar · 18/jul 15h
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function gameWinner(game) {
@@ -41,6 +42,17 @@ function gameWinner(game) {
   const hs = Number(game.home_score), as_ = Number(game.away_score)
   if (hs > as_) return game.home_team
   if (as_ > hs) return game.away_team
+  return null
+}
+
+function gameLoser(game) {
+  if (!game || game.status !== 'finished') return null
+  const ph = game.penalty_home != null ? Number(game.penalty_home) : null
+  const pa = game.penalty_away != null ? Number(game.penalty_away) : null
+  if (ph !== null) return ph > pa ? game.away_team : game.home_team
+  const hs = Number(game.home_score), as_ = Number(game.away_score)
+  if (hs > as_) return game.away_team
+  if (as_ > hs) return game.home_team
   return null
 }
 
@@ -64,7 +76,11 @@ async function advanceKnockout() {
     return gameWinner(findRow(t1, t2))
   }
 
-  async function maybeCreate(homeTeam, awayTeam, matchTime, stage) {
+  function loser(t1, t2) {
+    return gameLoser(findRow(t1, t2))
+  }
+
+  async function maybeCreate(homeTeam, awayTeam, matchTime, stage, cidade = null) {
     if (!homeTeam || !awayTeam) return
     // Already in snapshot (from a previous run) or just exists
     if (findRow(homeTeam, awayTeam)) return
@@ -75,8 +91,8 @@ async function advanceKnockout() {
     })
     if (chk.length > 0) return
     await db.execute({
-      sql: `INSERT INTO games (home_team, away_team, match_time, stage, status, locked) VALUES (?, ?, ?, ?, 'scheduled', 0)`,
-      args: [homeTeam, awayTeam, matchTime, stage],
+      sql: `INSERT INTO games (home_team, away_team, match_time, stage, cidade, status) VALUES (?, ?, ?, ?, ?, 'scheduled')`,
+      args: [homeTeam, awayTeam, matchTime, stage, cidade],
     })
     console.log(`[advance] Criado ${stage}: ${homeTeam} × ${awayTeam}`)
   }
@@ -86,10 +102,11 @@ async function advanceKnockout() {
     home: winner(...m.homeR32),
     away: winner(...m.awayR32),
     time: m.time,
+    cidade: m.cidade,
   }))
 
-  for (const { home, away, time } of r16) {
-    await maybeCreate(home, away, time, 'r16')
+  for (const { home, away, time, cidade } of r16) {
+    await maybeCreate(home, away, time, 'r16', cidade)
   }
 
   // ── QF ───────────────────────────────────────────────────────────────────
@@ -113,6 +130,14 @@ async function advanceKnockout() {
   for (const { home, away, time } of sf) {
     await maybeCreate(home, away, time, 'sf')
   }
+
+  // ── Disputa de 3º lugar ──────────────────────────────────────────────────
+  await maybeCreate(
+    loser(sf[0].home, sf[0].away),
+    loser(sf[1].home, sf[1].away),
+    THIRD_PLACE_TIME,
+    'third'
+  )
 
   // ── Final ─────────────────────────────────────────────────────────────────
   await maybeCreate(
