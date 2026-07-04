@@ -181,7 +181,14 @@ async function syncResults() {
 
     if (updated > 0) {
       console.log(`[Sync] ${updated} jogo(s) atualizado(s) automaticamente`);
+    }
+
+    // Sempre tenta avançar o mata-mata, mesmo sem resultados novos nesta chamada —
+    // cobre o caso de um resultado já ter sido salvo antes de uma falha na criação da fase seguinte.
+    try {
       await advanceKnockout();
+    } catch (err) {
+      console.log('[Sync] Erro ao avançar mata-mata:', err.message);
     }
 
     return { updated, status: 'ok' };
