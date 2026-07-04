@@ -9,6 +9,11 @@ const STAGES = [
   { key: 'results', label: 'Resultados' },
   { key: 'group', label: 'Grupos' },
   { key: 'r32', label: '16-avos' },
+  { key: 'r16', label: 'Oitavas' },
+  { key: 'qf', label: 'Quartas' },
+  { key: 'sf', label: 'Semi' },
+  { key: 'third', label: '3º Lugar' },
+  { key: 'final', label: 'Final' },
 ]
 
 const GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
@@ -58,8 +63,8 @@ export default function Games() {
   const filtered = useMemo(() => {
     if (stage === 'results') return games.filter(g => new Date(g.match_time) <= now)
     if (stage === 'group') return games.filter(g => g.stage === 'group' && g.group_name === group)
-    if (stage === 'r32') return games.filter(g => g.stage === 'r32')
-    return games
+    if (stage === 'all') return games
+    return games.filter(g => g.stage === stage)
   }, [games, stage, group])
 
   const days = useMemo(() => groupByDay(filtered), [filtered])
